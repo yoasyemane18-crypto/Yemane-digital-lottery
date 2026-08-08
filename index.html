@@ -1719,7 +1719,7 @@
 <script>
   const SUPABASE_URL = 'https://alfjvjukqhwqkqfgggkw.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_qjuZeQw4swhs8AEeMVSQTQ_WFtkvE8I';
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
   let registeredParticipants = [];
 
