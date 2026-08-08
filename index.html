@@ -1713,82 +1713,115 @@
             }
         }
 
-        function renderAdminDashboard() {
-            const adminWinnersContainer = document.getElementById('admin-winners-list');
-            const winnersCountTag = document.getElementById('winners-count-tag');
-            adminWinnersContainer.innerHTML = '';
+        <!-- Load Supabase JS Client Library -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-            const activeWinners = officialWinners.slice(0, 4);
-            winnersCountTag.textContent = `${activeWinners.length} / 4`;
+<script>
+  const SUPABASE_URL = 'https://alfjvjukqhwqkqfgggkw.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_qjuZeQw4swhs8AEeMVSQTQ_WFtkvE8I';
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-            if (activeWinners.length === 0) {
-                adminWinnersContainer.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem; background:#f8fafc; padding:12px; border-radius:12px; text-align:center;">No winners drawn yet.</p>';
-            } else {
-                let ranks = ["1st Place", "2nd Place", "3rd Place", "4th Place"];
-                activeWinners.forEach((w, index) => {
-                    const wRow = document.createElement('div');
-                    wRow.className = 'winner-row';
-                    wRow.style.margin = '0 0 8px 0';
-                    wRow.innerHTML = `
-                        <div class="winner-rank rank-${index + 1}">${ranks[index]}</div>
-                        <div class="winner-info">
-                            <div class="winner-info-name">${w.name}</div>
-                            <div class="winner-info-code">${w.code}</div>
-                        </div>
-                    `;
-                    adminWinnersContainer.appendChild(wRow);
-                });
-            }
+  let registeredParticipants = [];
 
-            const listContainer = document.getElementById('participants-list');
-            listContainer.innerHTML = '';
+  // 1. Fetch participants from Supabase and render
+  async function loadAndRenderAdminDashboard() {
+    const { data, error } = await supabase
+      .from('participants')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-            if (registeredParticipants.length === 0) {
-                listContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:20px;">No registered participants yet.</p>';
-                return;
-            }
+    if (error) {
+      console.error('Error fetching participants:', error);
+      return;
+    }
 
-            registeredParticipants.forEach((p, index) => {
-                const card = document.createElement('div');
-                card.className = 'participant-card';
-                card.innerHTML = `
-                    <div class="participant-top">
-                        <div>
-                            <div class="participant-name">${p.name}</div>
-                            <div class="participant-phone">${p.phone}</div>
-                        </div>
-                        <span class="status-badge ${p.status.toLowerCase()}">${p.status}</span>
-                    </div>
-                    <div class="participant-meta">
-                        <div><strong>Code:</strong> <span style="font-family:monospace; color:var(--primary-purple); font-weight:700;">${p.code}</span></div>
-                        <div><strong>Receipt:</strong> ${p.receipt}</div>
-                        <div><strong>Date:</strong> ${p.date}</div>
-                    </div>
-                    <div class="participant-actions">
-                        ${p.status === 'Pending' ? `<button class="btn-action btn-approve" onclick="approveParticipant(${index})">Approve Payment</button>` : ''}
-                        <button class="btn-action btn-delete" onclick="deleteParticipant(${index})">Remove</button>
-                    </div>
-                `;
-                listContainer.appendChild(card);
-            });
-        }
+    registeredParticipants = data || [];
 
-        function approveParticipant(index) {
-            registeredParticipants[index].status = 'Approved';
-            saveParticipantsState();
-            renderAdminDashboard();
-        }
+    // Update global participant stats count
+    const statCountElem = document.getElementById('stat-count');
+    if (statCountElem) {
+      statCountElem.textContent = `👥 ${registeredParticipants.length} Participants`;
+    }
 
-        function deleteParticipant(index) {
-            registeredParticipants.splice(index, 1);
-            saveParticipantsState();
-            document.getElementById('stat-count').textContent = `👥 ${registeredParticipants.length} Participants`;
-            renderAdminDashboard();
-        }
+    renderAdminDashboard();
+  }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('stat-count').textContent = `👥 ${registeredParticipants.length} Participants`;
-        });
-    </script>
+  // 2. Render Admin Dashboard List
+  function renderAdminDashboard() {
+    const listContainer = document.getElementById('participants-list');
+    if (!listContainer) return;
+    listContainer.innerHTML = '';
+
+    if (registeredParticipants.length === 0) {
+      listContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:20px;">No registered participants</p>';
+      return;
+    }
+
+    registeredParticipants.forEach((p) => {
+      const card = document.createElement('div');
+      card.className = 'participant-card';
+      
+      const formattedDate = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A';
+      const statusText = p.status || 'Pending';
+
+      card.innerHTML = `
+        <div class="participant-top">
+          <div>
+            <div class="participant-name">${p.name || 'N/A'}</div>
+            <div class="participant-phone">${p.phone || 'N/A'}</div>
+          </div>
+          <span class="status-badge ${statusText.toLowerCase()}">${statusText}</span>
+        </div>
+        <div class="participant-meta">
+          <div><strong>Receipt:</strong> ${p.receipt || 'N/A'}</div>
+          <div><strong>Date:</strong> ${formattedDate}</div>
+        </div>
+        <div class="participant-actions">
+          ${statusText === 'Pending' ? `<button class="btn-action btn-approve" onclick="approveParticipant(${p.id})">Approve</button>` : ''}
+          <button class="btn-action btn-delete" onclick="deleteParticipant(${p.id})">Remove</button>
+        </div>
+      `;
+      listContainer.appendChild(card);
+    });
+  }
+
+  // 3. Approve Participant in Supabase
+  async function approveParticipant(id) {
+    const { error } = await supabase
+      .from('participants')
+      .update({ status: 'Approved' })
+      .eq('id', id);
+
+    if (error) {
+      alert('Failed to approve participant: ' + error.message);
+      return;
+    }
+
+    loadAndRenderAdminDashboard();
+  }
+
+  // 4. Delete Participant from Supabase
+  async function deleteParticipant(id) {
+    if (!confirm('Are you sure you want to remove this entry?')) return;
+
+    const { error } = await supabase
+      .from('participants')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      alert('Failed to delete participant: ' + error.message);
+      return;
+    }
+
+    loadAndRenderAdminDashboard();
+  }
+
+  // 5. Initial Load
+  document.addEventListener('DOMContentLoaded', () => {
+    loadAndRenderAdminDashboard();
+  });
+</script>
+
 </body>
 </html>
