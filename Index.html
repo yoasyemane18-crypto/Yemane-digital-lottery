@@ -1,0 +1,1795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Lottery</title>
+    <style>
+        :root {
+            --primary-purple: #6366f1;
+            --primary-dark: #4f46e5;
+            --accent-pink: #ec4899;
+            --purple-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
+            --card-gradient: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+            --bg-light: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 20px 25px -5px rgba(99, 102, 241, 0.12), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #f8fafc;
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.08) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.08) 0px, transparent 50%);
+            color: var(--text-dark);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Header Navigation */
+        header {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 14px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 1.15rem;
+            background: var(--purple-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            cursor: pointer;
+            letter-spacing: -0.5px;
+        }
+
+        nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        nav a:hover, nav a.active {
+            color: var(--primary-purple);
+        }
+
+        .btn-admin {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 8px 18px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-admin:active {
+            transform: scale(0.96);
+        }
+
+        /* Container Card */
+        .container {
+            width: 100%;
+            max-width: 450px;
+            padding: 16px 12px;
+            flex: 1;
+        }
+
+        .main-card {
+            background: #ffffff;
+            border-radius: 32px;
+            padding: 24px 20px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            margin-bottom: 24px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.35s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Billboard Elements */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #eef2ff;
+            color: #4f46e5;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            margin-bottom: 12px;
+            border: 1px solid #e0e7ff;
+        }
+
+        .draw-card {
+            background: var(--card-gradient);
+            border-radius: 24px;
+            padding: 22px 18px;
+            border: 1px solid #e2e8f0;
+            margin-top: 16px;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .draw-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 5px;
+            height: 100%;
+            background: var(--purple-gradient);
+        }
+
+        .draw-tag {
+            color: var(--primary-purple);
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .draw-title {
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .draw-desc {
+            font-size: 0.88rem;
+            color: #475569;
+            line-height: 1.65;
+            margin-bottom: 18px;
+            background: #ffffff;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, #fefce8 0%, #fffbeb 100%);
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 0.84rem;
+            color: #92400e;
+            margin-bottom: 18px;
+            border: 1px solid #fef3c7;
+            line-height: 1.5;
+            font-weight: 500;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+
+        .stat-badge {
+            background: #f1f5f9;
+            padding: 8px 14px;
+            border-radius: 14px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: #475569;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-badge.purple {
+            background: #faf5ff;
+            color: #9333ea;
+            border-color: #f3e8ff;
+        }
+
+        /* Vertical Countdown */
+        .timer-container {
+            text-align: center;
+            padding: 20px 10px;
+            background: #ffffff;
+            border-radius: 20px;
+            border: 1px solid #f1f5f9;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+            margin-bottom: 18px;
+        }
+
+        .timer-date-label {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .timer-date-label strong {
+            display: block;
+            color: #0f172a;
+            font-size: 1rem;
+            text-transform: none;
+            letter-spacing: 0;
+            margin-top: 4px;
+            font-weight: 800;
+        }
+
+        .vertical-timer {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 12px;
+            margin: 10px 0;
+        }
+
+        .timer-unit {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f8fafc;
+            padding: 12px 8px;
+            border-radius: 16px;
+            flex: 1;
+            border: 1px solid #e2e8f0;
+        }
+
+        .timer-num {
+            font-size: 2rem;
+            font-weight: 900;
+            background: var(--purple-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+
+        .timer-text {
+            font-size: 0.65rem;
+            font-weight: 800;
+            color: #94a3b8;
+            letter-spacing: 1px;
+            margin-top: 6px;
+        }
+
+        /* Bank Account Info Card */
+        .bank-info-card {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            border-radius: 24px;
+            padding: 24px 20px;
+            text-align: center;
+            margin-top: 20px;
+            color: #ffffff;
+            box-shadow: 0 10px 20px rgba(49, 46, 129, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bank-info-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .bank-logo {
+            width: 64px;
+            height: 64px;
+            background: #ffffff;
+            border-radius: 18px;
+            margin: 0 auto 14px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        .bank-details {
+            font-size: 1.25rem;
+            font-weight: 800;
+            line-height: 1.4;
+            letter-spacing: 0.5px;
+            color: #ffffff;
+        }
+
+        .bank-details span {
+            color: #a5b4fc;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: block;
+            margin-top: 4px;
+        }
+
+        /* Messaging Chips */
+        .social-chips {
+            display: flex;
+            gap: 10px;
+            margin: 20px 0;
+            justify-content: space-between;
+        }
+
+        .chip {
+            flex: 1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 10px;
+            border-radius: 18px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .chip:active {
+            transform: translateY(2px);
+        }
+
+        .chip svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .chip-imo {
+            background: #faf5ff;
+            color: #a855f7;
+            border: 1px solid #f3e8ff;
+        }
+
+        .chip-whatsapp {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #dcfce7;
+        }
+
+        .chip-telegram {
+            background: #f0f9ff;
+            color: #0284c7;
+            border: 1px solid #e0f2fe;
+        }
+
+        /* Search Block */
+        .search-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 24px;
+            padding: 18px;
+            margin-top: 18px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            font-size: 0.9rem;
+            outline: none;
+            margin-bottom: 12px;
+            transition: border-color 0.2s ease;
+            background: #f8fafc;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-purple);
+            background: #ffffff;
+        }
+
+        .btn-purple {
+            width: 100%;
+            padding: 14px;
+            background: var(--purple-gradient);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .btn-purple:active {
+            transform: scale(0.98);
+        }
+
+        .btn-winners {
+            width: 100%;
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 18px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+            transition: transform 0.2s ease;
+        }
+
+        .btn-winners:active {
+            transform: scale(0.98);
+        }
+
+        /* Hero Banner */
+        .hero-banner {
+            background: var(--purple-gradient);
+            border-radius: 24px;
+            padding: 26px 20px;
+            color: white;
+            margin-bottom: 24px;
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.25);
+        }
+
+        .hero-tag {
+            font-size: 0.72rem;
+            letter-spacing: 2px;
+            font-weight: 800;
+            text-transform: uppercase;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+
+        .hero-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            line-height: 1.25;
+            margin-bottom: 12px;
+        }
+
+        .hero-desc {
+            font-size: 0.9rem;
+            line-height: 1.5;
+            opacity: 0.95;
+        }
+
+        /* Forms */
+        .form-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+            margin-bottom: 18px;
+            color: #0f172a;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 1.5px solid var(--border-color);
+            border-radius: 14px;
+            font-size: 0.95rem;
+            outline: none;
+            color: var(--text-dark);
+            background: #f8fafc;
+            transition: all 0.2s ease;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-purple);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        .upload-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 16px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #f8fafc;
+            transition: border-color 0.2s ease;
+        }
+
+        .upload-box:hover {
+            border-color: var(--primary-purple);
+        }
+
+        .btn-file {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: 700;
+            color: #334155;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            background: var(--purple-gradient);
+            color: white;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+            transition: transform 0.2s ease;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+        }
+
+        /* Success Confirmation */
+        .status-icon {
+            width: 64px;
+            height: 64px;
+            background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
+            color: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            margin: 10px auto 16px auto;
+            box-shadow: 0 8px 18px rgba(132, 204, 22, 0.3);
+        }
+
+        .code-box {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin: 16px 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .code-val {
+            font-size: 1.8rem;
+            font-weight: 900;
+            background: var(--purple-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+            font-family: monospace;
+            margin: 8px 0;
+        }
+
+        /* Admin Login Specific Styles */
+        .admin-header {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .admin-slot-icon {
+            font-size: 3rem;
+            margin-bottom: 12px;
+            display: inline-block;
+        }
+
+        .admin-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 6px;
+        }
+
+        .admin-subtitle {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        .input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+
+        .input-with-icon input {
+            padding-left: 48px;
+        }
+
+        .input-with-icon input.pass-input {
+            padding-right: 48px;
+        }
+
+        .toggle-eye {
+            position: absolute;
+            right: 16px;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 16px 0 24px 0;
+            font-size: 0.88rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #475569;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .remember-me input {
+            width: 16px;
+            height: 16px;
+            accent-color: #0f172a;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: var(--primary-purple);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .btn-login-submit {
+            width: 100%;
+            padding: 16px;
+            background-color: #0f172a;
+            color: #ffffff;
+            border: none;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(15, 23, 42, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .btn-login-submit:active {
+            transform: scale(0.98);
+        }
+
+        .error-message {
+            color: #ef4444;
+            background: #fef2f2;
+            border: 1px solid #fee2e2;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+            text-align: center;
+            display: none;
+        }
+
+        /* Admin Dashboard Styles */
+        .admin-dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 14px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .dashboard-title {
+            font-size: 1.3rem;
+            font-weight: 800;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: #dc2626;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .admin-control-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .admin-control-box h3 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .admin-control-box p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+        }
+
+        .btn-draw {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 14px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+        }
+
+        .btn-reset-draw {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .draw-status-msg {
+            margin-top: 14px;
+            padding: 12px;
+            background: #dcfce7;
+            color: #15803d;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            display: none;
+        }
+
+        .participant-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 16px;
+            margin-bottom: 14px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .participant-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+
+        .participant-name {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+        }
+
+        .participant-phone {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-bottom: 8px;
+        }
+
+        .status-badge {
+            font-size: 0.72rem;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.pending {
+            background: #fef3c7;
+            color: #b45309;
+        }
+
+        .status-badge.approved {
+            background: #dcfce7;
+            color: #15803d;
+        }
+
+        .participant-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-size: 0.82rem;
+            color: #475569;
+            background: #f8fafc;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid #f1f5f9;
+        }
+
+        .participant-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .btn-approve {
+            background: #16a34a;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #ef4444;
+            color: white;
+        }
+
+        /* Modal Overlay */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.65);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            border-radius: 28px;
+            padding: 28px 22px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            text-align: center;
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .winners-header {
+            margin-bottom: 20px;
+        }
+
+        .winners-header-icon {
+            font-size: 3rem;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .winners-header-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #0f172a;
+            text-transform: uppercase;
+        }
+
+        .winners-header-sub {
+            font-size: 0.88rem;
+            color: #64748b;
+            margin-top: 4px;
+        }
+
+        .winner-row {
+            display: flex;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 18px;
+            padding: 12px 14px;
+            margin-bottom: 10px;
+            gap: 12px;
+            text-align: left;
+        }
+
+        .winner-rank {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.95rem;
+            flex-shrink: 0;
+            color: white;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .rank-1 { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .rank-2 { background: linear-gradient(135deg, #94a3b8, #64748b); }
+        .rank-3 { background: linear-gradient(135deg, #b45309, #78350f); }
+        .rank-4 { background: linear-gradient(135deg, #6366f1, #4338ca); }
+
+        .winner-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .winner-info-name {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .winner-info-code {
+            font-size: 0.8rem;
+            font-family: monospace;
+            color: var(--primary-purple);
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .btn-modal-close {
+            width: 100%;
+            padding: 14px;
+            background: #0f172a;
+            color: #ffffff;
+            border: none;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            font-weight: 800;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+
+        /* Footer */
+        footer {
+            width: 100%;
+            background: #0f172a;
+            color: #ffffff;
+            padding: 35px 24px 25px 24px;
+            margin-top: auto;
+        }
+
+        .footer-brand {
+            font-size: 1.2rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: var(--purple-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .footer-desc {
+            font-size: 0.88rem;
+            color: #94a3b8;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .footer-contact-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .footer-dev-label {
+            font-size: 0.85rem;
+            color: #94a3b8;
+            margin-bottom: 4px;
+        }
+
+        .footer-dev-phone {
+            font-size: 0.95rem;
+            color: #818cf8;
+            text-decoration: none;
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 24px;
+        }
+
+        .footer-divider {
+            border: none;
+            height: 1px;
+            background-color: rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .footer-copyright {
+            text-align: center;
+            font-size: 0.82rem;
+            color: #64748b;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header>
+        <div class="brand" onclick="showPage('billboard')">🎟️ Digital Lottery</div>
+        <nav>
+            <a onclick="showPage('billboard')" id="nav-billboard" class="active">Billboard</a>
+            <a onclick="showPage('register')" id="nav-register">Register</a>
+            <button onclick="showPage('admin-login')" id="nav-admin" class="btn-admin">Admin Login</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="main-card">
+
+            <!-- 1. BILLBOARD PAGE -->
+            <div id="page-billboard" class="page active">
+                <div class="badge">✨ Winners & Draws</div>
+                <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.55; margin-bottom: 18px;">
+                    Browse the latest completed draws, discover the lucky winners, and stay ready for the next round.
+                </p>
+
+                <h3 style="font-size: 1.2rem; font-weight: 800; margin-bottom: 12px; color: #0f172a;">Upcoming Draws</h3>
+
+                <div class="draw-card">
+                    <div class="draw-tag">DRAW #1</div>
+                    <div class="draw-title">የማነ ዲጂታል ዕጣ - ብ 1000 ብር</div>
+                    <div class="draw-desc">
+                        1ይ ዕጣ 13,500 Subscribers<br>
+                        2ይ ዕጣ 8,000 Subscribers<br>
+                        3ይ ዕጣ 5,400 Subscribers<br>
+                        4ይ ዕጣ 3,300 Subscribers<br>
+                        5ይ ዕጣ ንዝተሳተፍኩም ኩልኹም ነጻ ሥልጠና ቪዲዮ ኤዲቲንግ፣ ማርኬቲንግ፣ ኮንተንት ክሬሽን የትዩብ ማስተር ክላስ
+                    </div>
+
+                    <div class="highlight-box">
+                        <span style="font-size: 1.3rem;">🏆</span>
+                        <div>ሞኒታይዝ ዝዀኑ ክፍሊት ዝጅምሩ የትዩብ ቻናላትን ከምኡ ድማ ንዝተሳተፍኩም ኩልኹም ነጻ ሥልጠና</div>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-badge" id="stat-count">👥 2 Participants</div>
+                        <div class="stat-badge purple">🎁 4 Winners Max</div>
+                    </div>
+
+                    <div class="timer-container">
+                        <div class="timer-date-label">
+                            Draw Date
+                            <strong id="draw-date-text">11/08/2026, 22:33:00</strong>
+                        </div>
+
+                        <!-- Live Vertical Countdown Timer -->
+                        <div class="vertical-timer">
+                            <div class="timer-unit">
+                                <span class="timer-num" id="days">00</span>
+                                <span class="timer-text">DAYS</span>
+                            </div>
+                            <div class="timer-unit">
+                                <span class="timer-num" id="hours">00</span>
+                                <span class="timer-text">HOURS</span>
+                            </div>
+                            <div class="timer-unit">
+                                <span class="timer-num" id="minutes">00</span>
+                                <span class="timer-text">MINS</span>
+                            </div>
+                            <div class="timer-unit">
+                                <span class="timer-num" id="seconds">00</span>
+                                <span class="timer-text">SECS</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn-submit" onclick="showPage('register')">📝 Register Now</button>
+                </div>
+
+                <!-- Bank Info Card -->
+                <div class="bank-info-card">
+                    <div class="bank-logo">
+                        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="50" cy="50" r="30" stroke="#4338ca" stroke-width="6"/>
+                            <text x="50%" y="57%" text-anchor="middle" fill="#4338ca" font-size="20" font-weight="900">CBE</text>
+                        </svg>
+                    </div>
+                    <div class="bank-details">
+                        1000309048621
+                        <span>Yemane Tsadik</span>
+                    </div>
+                </div>
+
+                <!-- Messaging Chips -->
+                <div class="social-chips">
+                    <a href="#" class="chip chip-imo">💬 IMO</a>
+                    
+                    <a href="https://wa.me/+251939383425" target="_blank" rel="noopener noreferrer" class="chip chip-whatsapp">
+                        <svg viewBox="0 0 24 24"><path d="M12.04 2c-5.52 0-10 4.48-10 10 0 1.77.46 3.45 1.28 4.9L2 22l5.25-1.32c1.4.77 3.03 1.2 4.79 1.2 5.52 0 10-4.48 10-10s-4.48-10-10-10zm0 18c-1.48 0-2.93-.4-4.2-1.15l-.3-.18-3.12.82.83-3.04-.2-.31C4.37 15 3.9 13.53 3.9 12c0-4.48 3.64-8.1 8.14-8.1s8.14 3.62 8.14 8.1-3.64 8.1-8.14 8.1zm4.61-6.12c-.25-.13-1.48-.73-1.71-.82-.23-.09-.4-.13-.57.13-.17.25-.66.82-.81.99-.15.17-.3.19-.55.06-.25-.13-1.05-.39-2-1.23-.74-.66-1.24-1.48-1.39-1.73-.15-.25-.02-.39.11-.52.12-.12.25-.3.38-.45.13-.15.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.38-.79-1.89-.21-.49-.42-.42-.57-.43h-.49c-.17 0-.45.06-.69.32-.24.25-.92.9-0.92 2.2s.94 2.55 1.07 2.73c.13.18 1.85 2.82 4.48 3.96.63.27 1.12.43 1.5.55.63.2 1.2.17 1.65.1.5-.08 1.48-.6 1.69-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.29z"/></svg>
+                        WhatsApp
+                    </a>
+
+                    <a href="https://t.me/Yemanetsadik" target="_blank" rel="noopener noreferrer" class="chip chip-telegram">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.67-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.38-.49 1.07-.75 4.19-1.82 6.98-3.02 8.38-3.6 3.99-1.66 4.82-1.95 5.36-1.96.12 0 .38.03.55.17.14.12.18.28.2.4.02.12.02.26 0 .4z"/></svg>
+                        Telegram
+                    </a>
+                </div>
+
+                <!-- Search Card -->
+                <div class="search-card">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Search by phone, name, or code...">
+                    <button class="btn-purple" onclick="searchParticipant()">Search</button>
+                </div>
+
+                <!-- Winners Gallery Button -->
+                <button class="btn-winners" onclick="showWinnersGallery()">
+                    🏆 Winners Gallery
+                </button>
+            </div>
+
+            <!-- 2. REGISTER PAGE -->
+            <div id="page-register" class="page">
+                <div class="hero-banner">
+                    <div class="hero-tag">JOIN THE DRAW</div>
+                    <div class="hero-title">Register for a chance to win.</div>
+                    <div class="hero-desc">
+                        Create your participant entry in minutes and receive a unique lottery code for the next draw.
+                    </div>
+                </div>
+
+                <div class="form-title">Register Now</div>
+
+                <form id="lottery-form" onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input type="text" id="firstName" placeholder="Yemane" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Middle Name</label>
+                        <input type="text" id="middleName" placeholder="Tsadik">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input type="text" id="lastName" placeholder="Gebreslassie" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" id="phone" placeholder="+251939383425" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Select Draw *</label>
+                        <select id="drawSelect" required>
+                            <option value="የማነ ዲጂታል ዕጣ - ብ 1000 ብር">የማነ ዲጂታል ዕጣ - ብ 1000 ብር</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Receipt (upload slip)* CBE - 1000309048621</label>
+                        <div class="upload-box">
+                            <label for="receipt-upload" class="btn-file">Choose file</label>
+                            <input type="file" id="receipt-upload" style="display: none;" onchange="updateFileName(this)">
+                            <span class="file-name" id="file-name-text" style="font-size: 0.85rem; color: var(--text-muted);">No file chosen</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">
+                        🎟️ Register
+                    </button>
+                </form>
+            </div>
+
+            <!-- 3. SUCCESS PAGE -->
+            <div id="page-success" class="page" style="text-align: center;">
+                <div class="status-icon">✓</div>
+                <h2 style="font-size: 1.4rem; font-weight: 800; margin-bottom: 8px;">Thank you for registering!</h2>
+                <p style="color: var(--text-muted); font-size: 0.95rem;">Hello <strong id="user-display-name" style="color: var(--primary-purple);">User</strong>,</p>
+
+                <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 20px; padding: 18px; margin: 20px 0;">
+                    <div style="color: #0284c7; font-size: 0.8rem; font-weight: 800; margin-bottom: 8px;">
+                        ⏳ PAYMENT VERIFICATION PENDING
+                    </div>
+                    <p style="font-size: 0.85rem; color: #0369a1; line-height: 1.5;">
+                        Your registration is now pending verification by our admin. Please wait while we verify your payment slip.
+                    </p>
+
+                    <div class="code-box">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 700;">YOUR LOTTERY CODE:</div>
+                        <div class="code-val" id="generated-code">LOT-J8ISVA3G</div>
+                        <div style="font-size: 0.75rem; color: #94a3b8;" id="registered-date">Registered: 07/08/2026, 17:47:59</div>
+                    </div>
+                </div>
+
+                <button class="btn-submit" onclick="showPage('billboard')">View Billboard</button>
+            </div>
+
+            <!-- 4. ADMIN LOGIN PAGE -->
+            <div id="page-admin-login" class="page">
+                <div class="admin-header">
+                    <div class="admin-slot-icon">🎰</div>
+                    <h2 class="admin-title">Welcome back</h2>
+                    <p class="admin-subtitle">Sign in to continue to your account</p>
+                </div>
+
+                <div id="login-error" class="error-message">Invalid email or password!</div>
+
+                <form onsubmit="handleAdminLogin(event)">
+                    <div class="form-group">
+                        <label>Email or Username</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon">✉</span>
+                            <input type="text" id="adminUser" placeholder="you@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="input-with-icon">
+                            <span class="input-icon">🔒</span>
+                            <input type="password" id="adminPassword" class="pass-input" placeholder="••••••••" required>
+                            <span class="toggle-eye" onclick="togglePasswordVisibility()">👁</span>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox">
+                            <span>Remember me</span>
+                        </label>
+                        <a href="#" class="forgot-link">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-login-submit">
+                        ➔ LOG IN
+                    </button>
+                </form>
+            </div>
+
+            <!-- 5. ADMIN DASHBOARD PAGE -->
+            <div id="page-admin-dashboard" class="page">
+                <div class="admin-dashboard-header">
+                    <h2 class="dashboard-title">Admin Dashboard</h2>
+                    <button class="btn-logout" onclick="showPage('admin-login')">Logout</button>
+                </div>
+
+                <!-- Conduct Random Draw Control Box -->
+                <div class="admin-control-box">
+                    <h3>🎲 Conduct Random Draw</h3>
+                    <p>Randomly select up to 4 distinct winners from the approved participants pool.</p>
+                    <button class="btn-draw" onclick="drawWinner()">Execute Random Draw</button>
+                    <div id="draw-status-msg" class="draw-status-msg"></div>
+                    <button class="btn-reset-draw" onclick="resetDraws()">Reset All Winners</button>
+                </div>
+
+                <!-- Admin Winners Section -->
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>🏆 Official Winners List</span>
+                        <span id="winners-count-tag" style="font-size: 0.8rem; background: #e0e7ff; color: #4338ca; padding: 4px 10px; border-radius: 12px; font-weight: 800;">0 / 4</span>
+                    </h3>
+                    <div id="admin-winners-list">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </div>
+
+                <h3 style="font-size: 1.1rem; font-weight: 800; margin-bottom: 12px;">Registered Users</h3>
+
+                <div id="participants-list">
+                    <!-- Dynamic participants rendering -->
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Winners Gallery Modal -->
+    <div id="winners-modal" class="modal-overlay" onclick="closeWinnersModal(event)">
+        <div class="modal-card">
+            <div class="winners-header">
+                <div class="winners-header-icon">🏆</div>
+                <div class="winners-header-title">Winners Gallery</div>
+                <div class="winners-header-sub">Maximum 4 Lucky Winners</div>
+            </div>
+
+            <div id="winners-list-container">
+                <!-- Dynamically populated winner cards -->
+            </div>
+
+            <button class="btn-modal-close" onclick="hideWinnersModal()">Close Gallery</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-brand">🎟️ Digital Lottery</div>
+        <div class="footer-desc">Fair play, real wins. Your chance to win big starts here.</div>
+        
+        <div class="footer-contact-title">Contact</div>
+        <div class="footer-dev-label">Designed & Developed by</div>
+        <a href="tel:+251939383425" class="footer-dev-phone">+251939383425</a>
+        
+        <hr class="footer-divider">
+        
+        <div class="footer-copyright">
+            © 2026 Digital Lottery. All rights reserved.
+        </div>
+    </footer>
+
+    <script>
+        // Initial Data Array
+        let registeredParticipants = JSON.parse(localStorage.getItem('lottery_participants')) || [
+            {
+                id: 1,
+                name: "Hemen yemane tsadik",
+                phone: "+251939383425",
+                code: "LOT-J8ISVA3G",
+                receipt: "slip_001.png",
+                date: "07/08/2026, 17:47:59",
+                status: "Approved"
+            },
+            {
+                id: 2,
+                name: "Yemane Tsadik Gebreslassie",
+                phone: "+251911223344",
+                code: "LOT-K9PX2B11",
+                receipt: "receipt_cbe.pdf",
+                date: "07/08/2026, 18:02:10",
+                status: "Approved"
+            }
+        ];
+
+        // Store drawn winners capped at max 4
+        let officialWinners = JSON.parse(localStorage.getItem('lottery_winners')) || [];
+
+        if (officialWinners.length > 4) {
+            officialWinners = officialWinners.slice(0, 4);
+            localStorage.setItem('lottery_winners', JSON.stringify(officialWinners));
+        }
+
+        function saveParticipantsState() {
+            localStorage.setItem('lottery_participants', JSON.stringify(registeredParticipants));
+        }
+
+        function saveWinnersState() {
+            localStorage.setItem('lottery_winners', JSON.stringify(officialWinners));
+        }
+
+        function getDrawTargetTime() {
+            const dateStr = document.getElementById("draw-date-text").textContent.trim();
+            const parts = dateStr.split(',');
+            if (parts.length < 2) return 0;
+
+            const dateParts = parts[0].trim().split('/'); // [DD, MM, YYYY]
+            const timeParts = parts[1].trim().split(':'); // [HH, MM, SS]
+
+            if (dateParts.length === 3 && timeParts.length === 3) {
+                const day = parseInt(dateParts[0], 10);
+                const month = parseInt(dateParts[1], 10) - 1;
+                const year = parseInt(dateParts[2], 10);
+                const hour = parseInt(timeParts[0], 10);
+                const min = parseInt(timeParts[1], 10);
+                const sec = parseInt(timeParts[2], 10);
+
+                return new Date(year, month, day, hour, min, sec).getTime();
+            }
+
+            return 0;
+        }
+
+        function updateCountdown() {
+            const drawTargetDate = getDrawTargetTime();
+            const now = new Date().getTime();
+            const timeRemaining = drawTargetDate - now;
+
+            if (timeRemaining > 0) {
+                const days = Math.floor(timeRemaining / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((timeRemaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((timeRemaining % (1000 * 60)) / 1000);
+
+                document.getElementById("days").textContent = String(days).padStart(2, '0');
+                document.getElementById("hours").textContent = String(hours).padStart(2, '0');
+                document.getElementById("minutes").textContent = String(minutes).padStart(2, '0');
+                document.getElementById("seconds").textContent = String(seconds).padStart(2, '0');
+            } else {
+                document.getElementById("days").textContent = "00";
+                document.getElementById("hours").textContent = "00";
+                document.getElementById("minutes").textContent = "00";
+                document.getElementById("seconds").textContent = "00";
+            }
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('nav a, nav button').forEach(link => link.classList.remove('active'));
+
+            document.getElementById('page-' + pageId).classList.add('active');
+            
+            const activeNav = document.getElementById('nav-' + pageId);
+            if (activeNav) activeNav.classList.add('active');
+
+            if (pageId === 'admin-dashboard') {
+                renderAdminDashboard();
+            }
+
+            window.scrollTo(0, 0);
+        }
+
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('adminPassword');
+            passInput.type = passInput.type === 'password' ? 'text' : 'password';
+        }
+
+        function updateFileName(input) {
+            const fileNameText = document.getElementById('file-name-text');
+            fileNameText.textContent = (input.files && input.files.length > 0) ? input.files[0].name : 'No file chosen';
+        }
+
+        function generateCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let res = 'LOT-';
+            for (let i = 0; i < 8; i++) {
+                res += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return res;
+        }
+
+        function handleRegister(e) {
+            e.preventDefault();
+            
+            const fname = document.getElementById('firstName').value;
+            const mname = document.getElementById('middleName').value;
+            const lname = document.getElementById('lastName').value;
+            const phone = document.getElementById('phone').value;
+            const receiptInput = document.getElementById('receipt-upload');
+            const receiptName = receiptInput.files.length > 0 ? receiptInput.files[0].name : "slip_uploaded.png";
+            
+            const fullName = `${fname} ${mname} ${lname}`.replace(/\s+/g, ' ').trim();
+            const code = generateCode();
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-GB') + ', ' + now.toLocaleTimeString('en-GB');
+
+            registeredParticipants.push({
+                id: registeredParticipants.length + 1,
+                name: fullName,
+                phone: phone,
+                code: code,
+                receipt: receiptName,
+                date: dateStr,
+                status: "Pending"
+            });
+
+            saveParticipantsState();
+
+            document.getElementById('stat-count').textContent = `👥 ${registeredParticipants.length} Participants`;
+
+            document.getElementById('user-display-name').textContent = fullName + ',';
+            document.getElementById('generated-code').textContent = code;
+            document.getElementById('registered-date').textContent = 'Registered: ' + dateStr;
+
+            showPage('success');
+            document.getElementById('lottery-form').reset();
+            document.getElementById('file-name-text').textContent = 'No file chosen';
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const userInput = document.getElementById('adminUser').value.trim();
+            const passInput = document.getElementById('adminPassword').value.trim();
+            const errorElement = document.getElementById('login-error');
+
+            if (userInput === 'hesamyemane21@gmail.com' && passInput === 'yemane@123') {
+                errorElement.style.display = 'none';
+                document.getElementById('adminUser').value = '';
+                document.getElementById('adminPassword').value = '';
+                showPage('admin-dashboard');
+            } else {
+                errorElement.style.display = 'block';
+            }
+        }
+
+        function drawWinner() {
+            const statusMsg = document.getElementById('draw-status-msg');
+
+            if (officialWinners.length >= 4) {
+                statusMsg.style.display = 'block';
+                statusMsg.style.background = '#fee2e2';
+                statusMsg.style.color = '#dc2626';
+                statusMsg.textContent = '⛔ Maximum limit reached! Exactly 4 winners have already been drawn.';
+                return;
+            }
+
+            const existingWinnerCodes = officialWinners.map(w => w.code);
+            const eligibleParticipants = registeredParticipants.filter(p => 
+                p.status === 'Approved' && !existingWinnerCodes.includes(p.code)
+            );
+
+            if (eligibleParticipants.length === 0) {
+                statusMsg.style.display = 'block';
+                statusMsg.style.background = '#fee2e2';
+                statusMsg.style.color = '#dc2626';
+                statusMsg.textContent = '❌ No new approved participants available for draw.';
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * eligibleParticipants.length);
+            const winner = eligibleParticipants[randomIndex];
+            
+            const now = new Date();
+            const drawDateStr = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString('en-GB');
+
+            const winnerEntry = {
+                ...winner,
+                drawnAt: drawDateStr
+            };
+
+            officialWinners.push(winnerEntry);
+            saveWinnersState();
+
+            statusMsg.style.display = 'block';
+            statusMsg.style.background = '#dcfce7';
+            statusMsg.style.color = '#15803d';
+            statusMsg.textContent = `🎉 Spot #${officialWinners.length} Winner Drawn: ${winner.name} (${winner.code})`;
+
+            renderAdminDashboard();
+        }
+
+        function resetDraws() {
+            if (confirm("Are you sure you want to clear all drawn winners?")) {
+                officialWinners = [];
+                saveWinnersState();
+                const statusMsg = document.getElementById('draw-status-msg');
+                statusMsg.style.display = 'block';
+                statusMsg.style.background = '#eff6ff';
+                statusMsg.style.color = '#1d4ed8';
+                statusMsg.textContent = '🔄 Winners list reset. You can draw 4 new winners now.';
+                renderAdminDashboard();
+            }
+        }
+
+        function searchParticipant() {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (!query) {
+                alert('Please enter a phone number, name, or lottery code to search.');
+                return;
+            }
+
+            const found = registeredParticipants.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                p.phone.toLowerCase().includes(query) || 
+                p.code.toLowerCase().includes(query)
+            );
+
+            if (found.length > 0) {
+                const details = found.map(p => `Name: ${p.name}\nCode: ${p.code}\nStatus: ${p.status}`).join('\n\n');
+                alert(`Search Result(s):\n\n${details}`);
+            } else {
+                alert('No matching participant found.');
+            }
+        }
+
+        function showWinnersGallery() {
+            const container = document.getElementById('winners-list-container');
+            container.innerHTML = '';
+
+            const displayWinners = officialWinners.slice(0, 4);
+
+            if (!displayWinners || displayWinners.length === 0) {
+                container.innerHTML = '<p style="color:#94a3b8; font-size:0.9rem; padding:15px;">No official winners drawn yet!</p>';
+            } else {
+                let ranks = ["1st", "2nd", "3rd", "4th"];
+
+                displayWinners.forEach((winner, index) => {
+                    const row = document.createElement('div');
+                    row.className = 'winner-row';
+                    row.innerHTML = `
+                        <div class="winner-rank rank-${index + 1}">${ranks[index]}</div>
+                        <div class="winner-info">
+                            <div class="winner-info-name">${winner.name}</div>
+                            <div class="winner-info-code">${winner.code}</div>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+            }
+
+            document.getElementById('winners-modal').classList.add('active');
+        }
+
+        function hideWinnersModal() {
+            document.getElementById('winners-modal').classList.remove('active');
+        }
+
+        function closeWinnersModal(e) {
+            if (e.target.classList.contains('modal-overlay')) {
+                hideWinnersModal();
+            }
+        }
+
+        function renderAdminDashboard() {
+            const adminWinnersContainer = document.getElementById('admin-winners-list');
+            const winnersCountTag = document.getElementById('winners-count-tag');
+            adminWinnersContainer.innerHTML = '';
+
+            const activeWinners = officialWinners.slice(0, 4);
+            winnersCountTag.textContent = `${activeWinners.length} / 4`;
+
+            if (activeWinners.length === 0) {
+                adminWinnersContainer.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem; background:#f8fafc; padding:12px; border-radius:12px; text-align:center;">No winners drawn yet.</p>';
+            } else {
+                let ranks = ["1st Place", "2nd Place", "3rd Place", "4th Place"];
+                activeWinners.forEach((w, index) => {
+                    const wRow = document.createElement('div');
+                    wRow.className = 'winner-row';
+                    wRow.style.margin = '0 0 8px 0';
+                    wRow.innerHTML = `
+                        <div class="winner-rank rank-${index + 1}">${ranks[index]}</div>
+                        <div class="winner-info">
+                            <div class="winner-info-name">${w.name}</div>
+                            <div class="winner-info-code">${w.code}</div>
+                        </div>
+                    `;
+                    adminWinnersContainer.appendChild(wRow);
+                });
+            }
+
+            const listContainer = document.getElementById('participants-list');
+            listContainer.innerHTML = '';
+
+            if (registeredParticipants.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:20px;">No registered participants yet.</p>';
+                return;
+            }
+
+            registeredParticipants.forEach((p, index) => {
+                const card = document.createElement('div');
+                card.className = 'participant-card';
+                card.innerHTML = `
+                    <div class="participant-top">
+                        <div>
+                            <div class="participant-name">${p.name}</div>
+                            <div class="participant-phone">${p.phone}</div>
+                        </div>
+                        <span class="status-badge ${p.status.toLowerCase()}">${p.status}</span>
+                    </div>
+                    <div class="participant-meta">
+                        <div><strong>Code:</strong> <span style="font-family:monospace; color:var(--primary-purple); font-weight:700;">${p.code}</span></div>
+                        <div><strong>Receipt:</strong> ${p.receipt}</div>
+                        <div><strong>Date:</strong> ${p.date}</div>
+                    </div>
+                    <div class="participant-actions">
+                        ${p.status === 'Pending' ? `<button class="btn-action btn-approve" onclick="approveParticipant(${index})">Approve Payment</button>` : ''}
+                        <button class="btn-action btn-delete" onclick="deleteParticipant(${index})">Remove</button>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
+        }
+
+        function approveParticipant(index) {
+            registeredParticipants[index].status = 'Approved';
+            saveParticipantsState();
+            renderAdminDashboard();
+        }
+
+        function deleteParticipant(index) {
+            registeredParticipants.splice(index, 1);
+            saveParticipantsState();
+            document.getElementById('stat-count').textContent = `👥 ${registeredParticipants.length} Participants`;
+            renderAdminDashboard();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('stat-count').textContent = `👥 ${registeredParticipants.length} Participants`;
+        });
+    </script>
+</body>
+</html>
