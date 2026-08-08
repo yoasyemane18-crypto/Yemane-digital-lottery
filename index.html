@@ -1142,9 +1142,9 @@
                     <div class="draw-title">የማነ ዲጂታል ዕጣ - ብ 1000 ብር</div>
                     <div class="draw-desc">
                         1ይ ዕጣ 200,000 Birr<br>
-2ይ ዕጣ 150,000 Birr<br>
-3ይ ዕጣ 100,000 Birr<br>
-4ይ ዕጣ 50,000 Birr<br>
+                        2ይ ዕጣ 150,000 Birr<br>
+                        3ይ ዕጣ 100,000 Birr<br>
+                        4ይ ዕጣ 50,000 Birr<br>
                     </div>
 
                     <div class="highlight-box">
@@ -1419,8 +1419,21 @@
         </div>
     </footer>
 
+    <!-- SUPABASE CLIENT LIBRARY -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- CORE APPLICATION SCRIPT -->
     <script>
-        // Initial Data Array
+        // Supabase Client Initialization
+        const SUPABASE_URL = 'https://alfjvjukqhwqkqfgggkw.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_qjuZeQw4swhs8AEeMVSQTQ_WFtkvE8I';
+        let sbClient = null;
+
+        if (window.supabase && window.supabase.createClient) {
+            sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+
+        // Initial Local State
         let registeredParticipants = JSON.parse(localStorage.getItem('lottery_participants')) || [
             {
                 id: 1,
@@ -1442,7 +1455,6 @@
             }
         ];
 
-        // Store drawn winners capped at max 4
         let officialWinners = JSON.parse(localStorage.getItem('lottery_winners')) || [];
 
         if (officialWinners.length > 4) {
@@ -1463,8 +1475,8 @@
             const parts = dateStr.split(',');
             if (parts.length < 2) return 0;
 
-            const dateParts = parts[0].trim().split('/'); // [DD, MM, YYYY]
-            const timeParts = parts[1].trim().split(':'); // [HH, MM, SS]
+            const dateParts = parts[0].trim().split('/');
+            const timeParts = parts[1].trim().split(':');
 
             if (dateParts.length === 3 && timeParts.length === 3) {
                 const day = parseInt(dateParts[0], 10);
@@ -1541,13 +1553,13 @@
             return res;
         }
 
-        function handleRegister(e) {
+        async function handleRegister(e) {
             e.preventDefault();
             
-            const fname = document.getElementById('firstName').value;
-            const mname = document.getElementById('middleName').value;
-            const lname = document.getElementById('lastName').value;
-            const phone = document.getElementById('phone').value;
+            const fname = document.getElementById('firstName').value.trim();
+            const mname = document.getElementById('middleName').value.trim();
+            const lname = document.getElementById('lastName').value.trim();
+            const phone = document.getElementById('phone').value.trim();
             const receiptInput = document.getElementById('receipt-upload');
             const receiptName = receiptInput.files.length > 0 ? receiptInput.files[0].name : "slip_uploaded.png";
             
@@ -1556,6 +1568,7 @@
             const now = new Date();
             const dateStr = now.toLocaleDateString('en-GB') + ', ' + now.toLocaleTimeString('en-GB');
 
+            // Save locally
             registeredParticipants.push({
                 id: registeredParticipants.length + 1,
                 name: fullName,
@@ -1565,11 +1578,20 @@
                 date: dateStr,
                 status: "Pending"
             });
-
             saveParticipantsState();
 
-            document.getElementById('stat-count').textContent = `👥 ${registeredParticipants.length} Participants`;
+            // Sync to Supabase if client initialized
+            if (sbClient) {
+                const { error } = await sbClient
+                    .from('participants')
+                    .insert([{ name: fullName, phone: phone, receipt: receiptName, code: code, status: 'Pending' }]);
+                
+                if (error) {
+                    console.error('Supabase sync error:', error.message);
+                }
+            }
 
+            document.getElementById('stat-count').textContent = `👥 ${registeredParticipants.length} Participants`;
             document.getElementById('user-display-name').textContent = fullName + ',';
             document.getElementById('generated-code').textContent = code;
             document.getElementById('registered-date').textContent = 'Registered: ' + dateStr;
