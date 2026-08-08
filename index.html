@@ -1713,343 +1713,138 @@
             }
         }
 
-           <!-- Load Supabase JS Client Library -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+        function renderAdminDashboard() {
+            const adminWinnersContainer = document.getElementById('admin-winners-list');
+            const winnersCountTag = document.getElementById('winners-count-tag');
+            adminWinnersContainer.innerHTML = '';
 
-<script>
-  // --- SUPABASE INITIALIZATION ---
-  const SUPABASE_URL = 'https://alfjvjukqhwqkqfgggkw.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_qjuZeQw4swhs8AEeMVSQTQ_WFtkvE8I';
-  const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+            const activeWinners = officialWinners.slice(0, 4);
+            winnersCountTag.textContent = `${activeWinners.length} / 4`;
 
-  let registeredParticipants = [];
+            if (activeWinners.length === 0) {
+                adminWinnersContainer.innerHTML = '<p style="color:#94a3b8; font-size:0.85rem; background:#f8fafc; padding:12px; border-radius:12px; text-align:center;">No winners drawn yet.</p>';
+            } else {
+                let ranks = ["1st Place", "2nd Place", "3rd Place", "4th Place"];
+                activeWinners.forEach((w, index) => {
+                    const wRow = document.createElement('div');
+                    wRow.className = 'winner-row';
+                    wRow.style.margin = '0 0 8px 0';
+                    wRow.innerHTML = `
+                        <div class="winner-rank rank-${index + 1}">${ranks[index]}</div>
+                        <div class="winner-info">
+                            <div class="winner-info-name">${w.name}</div>
+                            <div class="winner-info-code">${w.code}</div>
+                        </div>
+                    `;
+                    adminWinnersContainer.appendChild(wRow);
+                });
+            }
 
-  // --- UI NAVIGATION & MODAL HANDLERS ---
-  function showSection(sectionId) {
-    document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-    const targetSection = document.getElementById(sectionId);
-    if (targetSection) targetSection.classList.add('active');
-  }
+            const listContainer = document.getElementById('participants-list');
+            listContainer.innerHTML = '';
 
-  function showRegisterModal() {
-    const modal = document.getElementById('register-modal') || document.getElementById('registrationModal');
-    if (modal) modal.classList.add('active');
-  }
+            if (registeredParticipants.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:20px;">No registered participants yet.</p>';
+                return;
+            }
 
-  function hideRegisterModal() {
-    const modal = document.getElementById('register-modal') || document.getElementById('registrationModal');
-    if (modal) modal.classList.remove('active');
-  }
-
-  function showAdminLoginModal() {
-    const modal = document.getElementById('admin-modal') || document.getElementById('adminLoginModal');
-    if (modal) modal.classList.add('active');
-  }
-
-  function hideAdminModal() {
-    const modal = document.getElementById('admin-modal') || document.getElementById('adminLoginModal');
-    if (modal) modal.classList.remove('active');
-  }
-
-  // --- SUPABASE DATA HANDLERS ---
-
-  // 1. Fetch participants from Supabase
-  async function loadAndRenderAdminDashboard() {
-    if (!supabase) return;
-
-    const { data, error } = await supabase
-      .from('participants')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching participants:', error);
-      return;
-    }
-
-    registeredParticipants = data || [];
-
-    const statCountElem = document.getElementById('stat-count');
-    if (statCountElem) {
-      statCountElem.textContent = `👥 ${registeredParticipants.length} Participants`;
-    }
-
-    renderAdminDashboard();
-  }
-
-  // 2. Render Admin List
-  function renderAdminDashboard() {
-    const listContainer = document.getElementById('participants-list');
-    if (!listContainer) return;
-    listContainer.innerHTML = '';
-
-    if (registeredParticipants.length === 0) {
-      listContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:20px;">No registered participants</p>';
-      return;
-    }
-
-    registeredParticipants.forEach((p) => {
-      const card = document.createElement('div');
-      card.className = 'participant-card';
-
-      const formattedDate = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A';
-      const statusText = p.status || 'Pending';
-
-      card.innerHTML = `
-        <div class="participant-top">
-          <div>
-            <div class="participant-name">${p.name || 'N/A'}</div>
-            <div class="participant-phone">${p.phone || 'N/A'}</div>
-          </div>
-          <span class="status-badge ${statusText.toLowerCase()}">${statusText}</span>
-        </div>
-        <div class="participant-meta">
-          <div><strong>Receipt:</strong> ${p.receipt || 'N/A'}</div>
-          <div><strong>Date:</strong> ${formattedDate}</div>
-        </div>
-        <div class="participant-actions">
-          ${statusText === 'Pending' ? `<button class="btn-action btn-approve" onclick="approveParticipant(${p.id})">Approve</button>` : ''}
-          <button class="btn-action btn-delete" onclick="deleteParticipant(${p.id})">Remove</button>
-        </div>
-      `;
-      listContainer.appendChild(card);
-    });
-  }
-
-  // 3. Register Entry
-  async function handleRegistration(e) {
-    if (e) e.preventDefault();
-
-    const nameInput = document.getElementById('name') || document.querySelector('input[name="name"]');
-    const phoneInput = document.getElementById('phone') || document.querySelector('input[name="phone"]');
-    const receiptInput = document.getElementById('receipt') || document.querySelector('input[name="receipt"]');
-
-    const name = nameInput ? nameInput.value.trim() : '';
-    const phone = phoneInput ? phoneInput.value.trim() : '';
-    const receipt = receiptInput ? receiptInput.value.trim() : '';
-
-    if (!name || !phone || !receipt) {
-      alert('Please fill in all required fields.');
-      return;
-    }
-
-    if (!supabase) {
-      alert('Database connection error.');
-      return;
-    }
-
-    const { error } = await supabase
-      .from('participants')
-      .insert([{ name, phone, receipt, status: 'Pending' }]);
-
- if (error) {
-      alert('Registration failed: ' + error.message);
-    } else {
-      alert('Registration successful!');
-      if (nameInput) nameInput.value = '';
-      if (phoneInput) phoneInput.value = '';
-      if (receiptInput) receiptInput.value = '';
-      hideRegisterModal();
-      loadAndRenderAdminDashboard();
-    }
-  }
-
-  // 4. Approve Participant
-  async function approveParticipant(id) {
-    if (!supabase) return;
-    const { error } = await supabase
-      .from('participants')
-      .update({ status: 'Approved' })
-      .eq('id', id);
-
-    if (error) {
-      alert('Failed to approve participant: ' + error.message);
-      return;
-<!-- Load Supabase JS Client Library -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-  // --- 1. SUPABASE INITIALIZATION ---
-  const SUPABASE_URL = 'https://alfjvjukqhwqkqfgggkw.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_qjuZeQw4swhs8AEeMVSQTQ_WFtkvE8I';
-  const supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
-
-  let registeredParticipants = [];
-
-  // --- 2. UNIVERSAL UI HANDLERS ---
-  
-  // Tab Navigation (Digital Lottery vs Billboard vs Register)
-  function setupNavigation() {
-    const navLinks = document.querySelectorAll('.nav-link');
-    navLinks.forEach(link => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        
-        // Remove active class from all links
-        navLinks.forEach(l => l.classList.remove('active'));
-        link.classList.add('active');
-
-        // Hide all sections
-        document.querySelectorAll('.section').forEach(sec => sec.style.display = 'none');
-
-        // Show target section based on text content
-        const linkText = link.textContent.trim().toLowerCase();
-        if (linkText.includes('lottery')) {
-          document.getElementById('home-section').style.display = 'block';
-        } else if (linkText.includes('billboard')) {
-          document.getElementById('billboard-section').style.display = 'block';
-        } else if (linkText.includes('register')) {
-          const registerSec = document.getElementById('register-section') || document.getElementById('home-section');
-          if(registerSec) registerSec.style.display = 'block';
+            registeredParticipants.forEach((p, index) => {
+                const card = document.createElement('div');
+                card.className = 'participant-card';
+                card.innerHTML = `
+                    <div class="participant-top">
+                        <div>
+                            <div class="participant-name">${p.name}</div>
+                            <div class="participant-phone">${p.phone}</div>
+                        </div>
+                        <span class="status-badge ${p.status.toLowerCase()}">${p.status}</span>
+                    </div>
+                    <div class="participant-meta">
+                        <div><strong>Code:</strong> <span style="font-family:monospace; color:var(--primary-purple); font-weight:700;">${p.code}</span></div>
+                        <div><strong>Receipt:</strong> ${p.receipt}</div>
+                        <div><strong>Date:</strong> ${p.date}</div>
+                    </div>
+                    <div class="participant-actions">
+                        ${p.status === 'Pending' ? `<button class="btn-action btn-approve" onclick="approveParticipant(${index})">Approve Payment</button>` : ''}
+                        <button class="btn-action btn-delete" onclick="deleteParticipant(${index})">Remove</button>
+                    </div>
+                `;
+                listContainer.appendChild(card);
+            });
         }
-      });
-    });
-  }
 
-  // Modals (Register Now & Admin Login)
-  function setupModals() {
-    // 1. Register Modal
-    const registerBtns = document.querySelectorAll('button');
-    const registerModal = document.querySelector('.modal') || document.getElementById('register-modal');
-    
-    registerBtns.forEach(btn => {
-      if (btn.textContent.includes('Register Now')) {
-        btn.addEventListener('click', () => {
-          if (registerModal) registerModal.classList.add('active');
+        function approveParticipant(index) {
+            registeredParticipants[index].status = 'Approved';
+            saveParticipantsState();
+            renderAdminDashboard();
+        }
+
+        function deleteParticipant(index) {
+            registeredParticipants.splice(index, 1);
+            saveParticipantsState();
+            document.getElementById('stat-count').textContent = `👥 ${registeredParticipants.length} Participants`;
+            renderAdminDashboard();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('stat-count').textContent = `👥 ${registeredParticipants.length} Participants`;
+        });
+        <!-- SUPABASE INTEGRATION BLOCK -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  (function initSupabaseIntegration() {
+    const SUPABASE_URL = 'https://alfjvjukqhwqkqfgggkw.supabase.co';
+    const SUPABASE_KEY = 'sb_publishable_qjuZeQw4swhs8AEeMVSQTQ_WFtkvE8I';
+
+    let sbClient = null;
+    if (window.supabase && window.supabase.createClient) {
+      sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
+    // Connect Form Submission to Supabase
+    document.addEventListener('DOMContentLoaded', () => {
+      const regForm = document.getElementById('registrationForm') || document.querySelector('form');
+      if (regForm) {
+        regForm.addEventListener('submit', async (e) => {
+          e.preventDefault();
+
+          if (!sbClient) {
+            alert('Database initialization failed. Please refresh.');
+            return;
+          }
+
+          const nameInput = document.getElementById('name') || document.querySelector('input[placeholder*="Name"]');
+          const phoneInput = document.getElementById('phone') || document.querySelector('input[placeholder*="Phone"]');
+          const receiptInput = document.getElementById('receipt') || document.querySelector('input[placeholder*="Receipt"]');
+
+          const name = nameInput ? nameInput.value.trim() : '';
+          const phone = phoneInput ? phoneInput.value.trim() : '';
+          const receipt = receiptInput ? receiptInput.value.trim() : '';
+
+          if (!name || !phone || !receipt) {
+            alert('Please fill in all required fields.');
+            return;
+          }
+
+          const { error } = await sbClient
+            .from('participants')
+            .insert([{ name, phone, receipt, status: 'Pending' }]);
+
+          if (error) {
+            alert('Registration failed: ' + error.message);
+          } else {
+            alert('Registration successful! Recorded in database.');
+            if (nameInput) nameInput.value = '';
+            if (phoneInput) phoneInput.value = '';
+            if (receiptInput) receiptInput.value = '';
+            if (typeof hideRegisterModal === 'function') hideRegisterModal();
+          }
         });
       }
     });
-
-    // 2. Admin Login Modal
-    const adminBtn = document.querySelector('.btn-login') || document.querySelector('.admin-btn');
-    const adminModal = document.getElementById('admin-modal') || document.getElementById('login-modal');
-    
-    if (adminBtn) {
-      adminBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        if (adminModal) adminModal.classList.add('active');
-      });
-    }
-
-    // 3. Close Modals when clicking outside (overlay)
-    document.querySelectorAll('.modal-overlay').forEach(overlay => {
-      overlay.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal-overlay')) {
-          document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-        }
-      });
-    });
-  }
-
-  // --- 3. SUPABASE DATA HANDLERS ---
-
-  async function loadAndRenderAdminDashboard() {
-    if (!supabase) return;
-    const { data, error } = await supabase.from('participants').select('*').order('created_at', { ascending: false });
-    if (error) return;
-    
-    registeredParticipants = data || [];
-    const statCountElem = document.getElementById('stat-count');
-    if (statCountElem) statCountElem.textContent = `👥 ${registeredParticipants.length} Participants`;
-    
-    renderAdminDashboard();
-  }
-
-  function renderAdminDashboard() {
-    const listContainer = document.getElementById('participants-list');
-    if (!listContainer) return;
-    listContainer.innerHTML = '';
-
-    if (registeredParticipants.length === 0) {
-      listContainer.innerHTML = '<p style="text-align:center; color:#94a3b8; padding:20px;">No registered participants</p>';
-      return;
-    }
-
-    registeredParticipants.forEach((p) => {
-      const card = document.createElement('div');
-      card.className = 'participant-card';
-      const formattedDate = p.created_at ? new Date(p.created_at).toLocaleDateString() : 'N/A';
-      const statusText = p.status || 'Pending';
-
-      card.innerHTML = `
-        <div class="participant-top">
-          <div>
-            <div class="participant-name">${p.name || 'N/A'}</div>
-            <div class="participant-phone">${p.phone || 'N/A'}</div>
-          </div>
-          <span class="status-badge ${statusText.toLowerCase()}">${statusText}</span>
-        </div>
-        <div class="participant-meta">
-          <div><strong>Receipt:</strong> ${p.receipt || 'N/A'}</div>
-          <div><strong>Date:</strong> ${formattedDate}</div>
-        </div>
-        <div class="participant-actions">
-          ${statusText === 'Pending' ? `<button class="btn-action btn-approve" onclick="approveParticipant(${p.id})">Approve</button>` : ''}
-          <button class="btn-action btn-delete" onclick="deleteParticipant(${p.id})">Remove</button>
-        </div>
-      `;
-      listContainer.appendChild(card);
-    });
-  }
-
-  async function handleRegistration(e) {
-    if (e) e.preventDefault();
-
-    const nameInput = document.querySelector('input[placeholder*="Name"]') || document.querySelector('input[name="name"]');
-    const phoneInput = document.querySelector('input[placeholder*="Phone"]') || document.querySelector('input[name="phone"]');
-    const receiptInput = document.querySelector('input[placeholder*="Receipt"]') || document.querySelector('input[name="receipt"]');
-
-    const name = nameInput ? nameInput.value.trim() : '';
-    const phone = phoneInput ? phoneInput.value.trim() : '';
-    const receipt = receiptInput ? receiptInput.value.trim() : '';
-
-    if (!name || !phone || !receipt) {
-      alert('Please fill in all required fields.');
-      return;
-    }
-
-    if (!supabase) return;
-
-    const { error } = await supabase.from('participants').insert([{ name, phone, receipt, status: 'Pending' }]);
-
-    if (error) {
-      alert('Registration failed: ' + error.message);
-    } else {
-      alert('Registration successful!');
-      if (nameInput) nameInput.value = '';
-      if (phoneInput) phoneInput.value = '';
-      if (receiptInput) receiptInput.value = '';
-      document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-      loadAndRenderAdminDashboard();
-    }
-  }
-
-  // Bind to Window scope so inline HTML onclick="" works
-  window.approveParticipant = async function(id) {
-    if (!supabase) return;
-    const { error } = await supabase.from('participants').update({ status: 'Approved' }).eq('id', id);
-    if (!error) loadAndRenderAdminDashboard();
-  };
-
-  window.deleteParticipant = async function(id) {
-    if (!confirm('Are you sure you want to remove this entry?')) return;
-    if (!supabase) return;
-    const { error } = await supabase.from('participants').delete().eq('id', id);
-    if (!error) loadAndRenderAdminDashboard();
-  };
-
-  // --- 4. INITIALIZATION ON LOAD ---
-  document.addEventListener('DOMContentLoaded', () => {
-    setupNavigation();
-    setupModals();
-
-    const regForm = document.querySelector('form');
-    if (regForm) regForm.addEventListener('submit', handleRegistration);
-
-    loadAndRenderAdminDashboard();
-  });
+  })();
 </script>
 
-
+    </script>
 </body>
 </html>
