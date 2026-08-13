@@ -8,6 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Firebase SDK CDN (Compat) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <style>
         .input {
             width: 100%;
@@ -124,61 +127,27 @@
 
     <!-- App Logic Script -->
     <script>
+        // TODO: Replace with your actual Firebase project configuration credentials
+        const firebaseConfig = {
+            apiKey: "AIzaSyAuvNzd5bAWt0L2-aHQ6ggF1TZTuZLAda8",
+            authDomain: "yemane-digital.firebaseapp.com",
+            projectId: "yemane-digital",
+            storageBucket: "yemane-digital.appfirebasestorage.app",
+            messagingSenderId: "451594378938",
+            appId: "1:451594378938:web:3d0b9b375499d8ce95ac83"
+measurementId: "G-LF1MZLL1VS"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         const seedWinners = [];
 
         let appState = {
             page: "billboard",
             lang: "en",
-            entries: [
-                {
-                    id: "LOT-J8ISVA3G",
-                    firstName: "Hemen",
-                    middleName: "yemane",
-                    lastName: "tsadik",
-                    phone: "251939383425",
-                    draw: "gena",
-                    fileName: "slip_001.png",
-                    fileData: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80",
-                    status: "approved",
-                    submittedAt: "2026-07-08T17:47:59"
-                },
-                {
-                    id: "LOT-K9PX2B11",
-                    firstName: "Yemane",
-                    middleName: "Tsadik",
-                    lastName: "Gebreslassie",
-                    phone: "251911223344",
-                    draw: "gena",
-                    fileName: "receipt_cbe.pdf",
-                    fileData: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=600&auto=format&fit=crop&q=80",
-                    status: "approved",
-                    submittedAt: "2026-07-08T18:02:10"
-                },
-                {
-                    id: "LOT-1U064026",
-                    firstName: "Hesam",
-                    middleName: "Yemane",
-                    lastName: "Tsadik",
-                    phone: "251939383425",
-                    draw: "gena",
-                    fileName: "20260811_011841.jpg",
-                    fileData: "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=600&auto=format&fit=crop&q=80",
-                    status: "approved",
-                    submittedAt: "2026-08-12T13:31:39"
-                },
-                {
-                    id: "LOT-8QWER851",
-                    firstName: "Yoas",
-                    middleName: "Yemane",
-                    lastName: "Tsadik",
-                    phone: "251939383425",
-                    draw: "gena",
-                    fileName: "20260810_090448.jpg",
-                    fileData: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=600&auto=format&fit=crop&q=80",
-                    status: "approved",
-                    submittedAt: "2026-08-12T13:32:15"
-                }
-            ],
+            entries: [],
             officialWinners: [],
             dynamicWinners: [],
             preselectDraw: "",
@@ -602,8 +571,8 @@
                 return;
             }
 
+            const ticketId = genTicketId();
             const entry = {
-                id: genTicketId(),
                 firstName: f.firstName,
                 middleName: f.middleName,
                 lastName: f.lastName,
@@ -615,10 +584,17 @@
                 submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
             };
 
-            appState.entries.unshift(entry);
-            appState.statusResult = entry;
-            appState.registerForm = { firstName: "", middleName: "", lastName: "", phone: "", draw: "", fileName: "", fileData: "", error: "" };
-            router.navigate('statusConfirm');
+            db.collection("entries").doc(ticketId).set(entry)
+                .then(() => {
+                    appState.statusResult = { id: ticketId, ...entry };
+                    appState.registerForm = { firstName: "", middleName: "", lastName: "", phone: "", draw: "", fileName: "", fileData: "", error: "" };
+                    router.navigate('statusConfirm');
+                })
+                .catch((error) => {
+                    console.error("Error writing document: ", error);
+                    appState.registerForm.error = "Failed to submit registration to database. Please try again.";
+                    render();
+                });
         }
 
         function renderConfirmation() {
@@ -634,9 +610,9 @@
                     </p>
                     <div class="bg-white border border-[#eee3d0] rounded-xl p-5 text-left mb-6">
                         <div class="text-xs text-[#8a8398]">Ticket ID</div>
-                        <div class="font-bold text-lg text-[#1a1440] mb-2">${entry.id}</div>
-                        <div class="text-sm text-[#4a4460]">${entry.firstName} ${entry.middleName} ${entry.lastName}</div>
-                        <div class="text-sm text-[#4a4460]">+${entry.phone}</div>
+                        <div class="font-bold text-lg text-[#1a1440] mb-2">${entry ? entry.id : ''}</div>
+                        <div class="text-sm text-[#4a4460]">${entry ? entry.firstName : ''} ${entry ? entry.middleName : ''} ${entry ? entry.lastName : ''}</div>
+                        <div class="text-sm text-[#4a4460]">+${entry ? entry.phone : ''}</div>
                     </div>
                     <button onclick="router.navigate('billboard')" class="bg-[#1a1440] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#2a2260]">
                         Back to Billboard
@@ -832,7 +808,7 @@
                 }
             }
 
-            let timeLeft = 60; // 1 minute delay
+            let timeLeft = 60;
             const shufflingPool = approvedEntries.map(e => `${e.id} - ${e.firstName} ${e.lastName} (+${e.phone})`);
             
             const shuffleInterval = setInterval(() => {
@@ -870,6 +846,22 @@
                         quote: idx === 0 ? "A life-changing moment! Thank you Yemane Digital Lottery." : undefined
                     }));
 
+                    // Save winners to Firestore collection as well
+                    selectedWinners.forEach((w, idx) => {
+                        const winnerData = {
+                            id: w.id,
+                            firstName: w.firstName,
+                            middleName: w.middleName || "",
+                            lastName: w.lastName,
+                            phone: w.phone,
+                            draw: idx === 0 ? "Grand Live Draw" : "Special Live Draw",
+                            prize: idx === 0 ? "200,000 ETB" : idx === 1 ? "150,000 ETB" : idx === 2 ? "100,000 ETB" : "50,000 ETB",
+                            quote: idx === 0 ? "A life-changing moment! Thank you Yemane Digital Lottery." : "",
+                            submittedAt: w.submittedAt
+                        };
+                        db.collection("winners").doc(w.id).set(winnerData).catch(err => console.error(err));
+                    });
+
                     appState.isDrawingInProgress = false;
                     appState.drawProgressText = "";
                     render();
@@ -878,24 +870,26 @@
         }
 
         function resetAllWinners() {
+            // Clear winners from Firestore
+            db.collection("winners").get().then(snapshot => {
+                const batch = db.batch();
+                snapshot.docs.forEach(doc => batch.delete(doc.ref));
+                return batch.commit();
+            }).catch(err => console.error(err));
+
             appState.officialWinners = [];
             appState.dynamicWinners = [];
             render();
         }
 
         function approveEntry(id) {
-            const entry = appState.entries.find(e => e.id === id);
-            if (entry) {
-                entry.status = "approved";
-                render();
-            }
+            db.collection("entries").doc(id).update({ status: "approved" })
+                .catch((error) => console.error("Error updating status: ", error));
         }
 
         function removeEntry(id) {
-            appState.entries = appState.entries.filter(e => e.id !== id);
-            appState.officialWinners = appState.officialWinners.filter(w => w.id !== id);
-            appState.dynamicWinners = appState.dynamicWinners.filter(w => w.id !== id);
-            render();
+            db.collection("entries").doc(id).delete()
+                .catch((error) => console.error("Error removing document: ", error));
         }
 
         function renderAdminDashboard() {
@@ -919,7 +913,7 @@
                             </div>
                         </div>
 
-                        <!-- Conduct Random Draw Section (Integrated with 1-Minute Suspense Delay & Shuffling Animation) -->
+                        <!-- Conduct Random Draw Section -->
                         <div class="bg-[#fcfbfa] border border-[#e8ddc8] rounded-xl p-5 mb-6 text-center shadow-sm">
                             <div class="font-bold text-[#1a1440] flex items-center justify-center gap-1.5 mb-1">
                                 🎲 Conduct Random Draw
@@ -968,7 +962,7 @@
                                             <div class="text-xs text-[#6a6480] mb-2">+${w.phone}</div>
                                             <div class="bg-white/80 border border-[#eee3d0] rounded-lg p-2.5 text-xs space-y-1">
                                                 <div><span class="text-[#8a8398]">Code:</span> <span class="font-mono text-[#4c2fae] font-semibold">${w.id}</span></div>
-                                                <div><span class="text-[#8a8398]">Receipt:</span> ${w.fileName}</div>
+                                                <div><span class="text-[#8a8398]">Receipt:</span> ${w.fileName || 'N/A'}</div>
                                                 <div><span class="text-[#8a8398]">Date:</span> ${w.submittedAt}</div>
                                             </div>
                                         </div>
@@ -1041,7 +1035,21 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            render();
+            // Real-time synchronization listeners with Firestore
+            db.collection("entries").orderBy("submittedAt", "desc").onSnapshot((snapshot) => {
+                appState.entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                render();
+            }, (error) => {
+                console.error("Error fetching entries: ", error);
+            });
+
+            db.collection("winners").onSnapshot((snapshot) => {
+                appState.officialWinners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                appState.dynamicWinners = appState.officialWinners;
+                render();
+            }, (error) => {
+                console.error("Error fetching winners: ", error);
+            });
         });
     </script>
 </body>
