@@ -8,9 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons CDN -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Firebase SDK CDN (Compat) -->
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
     <style>
         .input {
             width: 100%;
@@ -90,7 +87,7 @@
             <button onclick="router.navigate('billboard')" class="font-bold flex items-center gap-2">
                 <i data-lucide="star" width="14" height="14" fill="#d4a017" class="text-[#d4a017]"></i> Yemane Digital Lottery
             </button>
-
+            
             <!-- Connected Messaging Links -->
             <div class="flex items-center gap-3">
                 <a href="imo://chat?phone=+251939383425" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
@@ -127,21 +124,6 @@
 
     <!-- App Logic Script -->
     <script>
-        // TODO: Replace with your actual Firebase project configuration credentials
-        const firebaseConfig = {
-            apiKey: "AIzaSyAuvNzd5bAWt0L2-aHQ6ggF1TZTuZLAda8",
-            authDomain: "yemane-digital.firebaseapp.com",
-            projectId: "yemane-digital",
-            storageBucket: "yemane-digital.appfirebasestorage.app",
-            messagingSenderId: "451594378938",
-            appId: "1:451594378938:web:3d0b9b375499d8ce95ac83",
-            measurementId: "G-LF1MZLL1VS"
-        };
-
-        // Initialize Firebase
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-
         const seedWinners = [];
 
         let appState = {
@@ -166,23 +148,8 @@
 
         let countdownTimerInterval = null;
 
-        // Tracks IDs the admin has explicitly removed, so a Firestore resync can never
-        // bring a removed entry back or make it look like entries are disappearing on their own.
-        let removedEntryIds = new Set();
-
         function genTicketId() {
             return `LOT-${Math.random().toString(36).substring(2, 8).toUpperCase()}${Math.floor(10 + Math.random() * 90)}`;
-        }
-
-        // Strips spaces/dashes/parentheses and a leading "+" or "251" country code
-        // so the phone number is always stored as the local digits only.
-        // This prevents the "++251..." double country-code bug on the confirmation screen.
-        function sanitizePhone(raw) {
-            let digits = (raw || "").replace(/[^\d]/g, "");
-            if (digits.startsWith("251")) {
-                digits = digits.substring(3);
-            }
-            return digits;
         }
 
         const router = {
@@ -312,9 +279,9 @@
 
         function renderBillboard() {
             const query = appState.billboardSearchQuery.trim().toLowerCase();
-            const matchedEntry = query ? appState.entries.find(e =>
-                e.id.toLowerCase() === query ||
-                e.phone.toLowerCase().includes(query) ||
+            const matchedEntry = query ? appState.entries.find(e => 
+                e.id.toLowerCase() === query || 
+                e.phone.toLowerCase().includes(query) || 
                 `${e.firstName} ${e.middleName || ''} ${e.lastName}`.toLowerCase().includes(query)
             ) : null;
 
@@ -335,7 +302,7 @@
                     <!-- Upcoming Draws Main Card -->
                     <div class="bg-white rounded-3xl border border-[#e8ddc8] p-5 shadow-sm relative overflow-hidden mb-5">
                         <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#4c2fae] via-[#b652c5] to-[#e66c94]"></div>
-
+                        
                         <div class="text-[11px] font-bold text-[#7a3fd6] tracking-wider uppercase mb-1">DRAW #1</div>
                         <h2 class="text-base font-bold text-[#1a1440] mb-3">የማነ ድጅታል ዕጣ - በ 1000 ብር</h2>
 
@@ -483,14 +450,14 @@
                                 <label class="text-xs font-semibold text-[#1a1440] mb-1 block">Select Active Draw / ዕጣ ይምረጡ</label>
                                 <select id="reg-draw" onchange="appState.registerForm.draw=this.value" class="input">
                                     <option value="">Choose a draw...</option>
-                                    <option value="gena" ${appState.preselectDraw === 'gena' ? 'selected' : ''}>Yeme Special Draw — 1000 ETB</option>
+                                    <option value="gena" ${appState.preselectDraw === 'gena' ? 'selected' : ''}>Gena Special Draw — 100 ETB</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="mb-4">
-                            <label class="text-xs font- text-[#1a1440] mb-1 block">Payment Receipt Slip / የክፍያ ደረሰኝ</label>
-
+                            <label class="text-xs font-semibold text-[#1a1440] mb-1 block">Payment Receipt Slip / የክፍያ ደረሰኝ</label>
+                            
                             <div id="drop-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" class="border-2 border-dashed border-[#d8cdb5] rounded-lg p-5 text-center hover:border-[#4c2fae] transition-colors bg-[#fdfbf5] relative">
                                 <input id="file-input" type="file" accept=".png,.jpg,.jpeg,.pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleFileSelect(event)" />
                                 <div class="pointer-events-none">
@@ -514,7 +481,7 @@
                         <button onclick="submitRegistration()" class="w-full bg-[#d4a017] hover:bg-[#c2910f] text-[#1a1440] font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
                             Submit Registration <i data-lucide="arrow-right" width="16" height="16"></i>
                         </button>
-                        <p class="text-center text-[10px] text-[#b0a98f] mt-4">Demo prototype — no real payment is processed.</p>
+                        <p class="text-center text-[10px] text-[#b0a98f] mt-4">Demo prototype — no real payment is processed and data is stored securely in Firebase Cloud Firestore.</p>
                     </div>
                 </div>
             `;
@@ -566,6 +533,11 @@
             reader.readAsDataURL(file);
         }
 
+        // Cloud Firestore Submission Handlers defined globally
+        let submitRegistrationToCloud = null;
+        let approveEntryInCloud = null;
+        let removeEntryFromCloud = null;
+
         function submitRegistration() {
             const f = appState.registerForm;
             const firstNameEl = document.getElementById("reg-firstName");
@@ -586,15 +558,12 @@
                 return;
             }
 
-            // Normalize phone so it never gets a duplicated country code (fixes "++251..." bug)
-            const cleanPhone = sanitizePhone(f.phone);
-
-            const ticketId = genTicketId();
             const entry = {
+                id: genTicketId(),
                 firstName: f.firstName,
                 middleName: f.middleName,
                 lastName: f.lastName,
-                phone: cleanPhone,
+                phone: f.phone,
                 draw: f.draw,
                 fileName: f.fileName,
                 fileData: f.fileData || "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80",
@@ -602,39 +571,34 @@
                 submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
             };
 
-            // Show the confirmation screen immediately (optimistic UI) so the user
-            // always sees "Registration submitted" right after tapping Submit,
-            // even on a slow/unreliable connection. Firestore sync happens in
-            // the background and does not block or gate this navigation.
-            appState.statusResult = { id: ticketId, ...entry };
-            appState.entries = [{ id: ticketId, ...entry }, ...appState.entries];
-            appState.registerForm = { firstName: "", middleName: "", lastName: "", phone: "", draw: "", fileName: "", fileData: "", error: "" };
-            router.navigate('statusConfirm');
-
-            db.collection("entries").doc(ticketId).set(entry)
-                .catch((error) => {
-                    console.error("Error writing document (will retry via next sync): ", error);
-                });
+            if (typeof submitRegistrationToCloud === 'function') {
+                submitRegistrationToCloud(entry);
+            } else {
+                appState.entries.unshift(entry);
+                appState.statusResult = entry;
+                appState.registerForm = { firstName: "", middleName: "", lastName: "", phone: "", draw: "", fileName: "", fileData: "", error: "" };
+                router.navigate('statusConfirm');
+            }
         }
 
         function renderConfirmation() {
             const entry = appState.statusResult;
             return `
-                <div class="max-w-md mx-auto px-5 py-12 text-center">
-                    <div class="w-12 h-12 rounded-full bg-[#f4f1fb] text-[#4c2fae] flex items-center justify-center mx-auto mb-4 border border-[#e3d8f0]">
-                        <i data-lucide="check" width="22" height="22"></i>
+                <div class="max-w-lg mx-auto px-5 py-16 text-center">
+                    <div class="w-16 h-16 rounded-full bg-[#f4f1fb] text-[#4c2fae] flex items-center justify-center mx-auto mb-5">
+                        <i data-lucide="check" width="30" height="30"></i>
                     </div>
-                    <h2 class="text-lg font-bold text-[#1a1440] mb-1">Registration submitted</h2>
-                    <p class="text-xs text-[#6a6480] mb-6">
+                    <h2 class="text-xl font-bold text-[#1a1440] mb-2">Registration submitted to cloud</h2>
+                    <p class="text-[#6a6480] mb-6">
                         Your entry is <span class="font-semibold text-[#8a6d10]">pending</span> admin approval. Keep your ticket number to check status any time.
                     </p>
-                    <div class="bg-white border border-[#e8ddc8] rounded-2xl p-4 text-left shadow-sm mb-6">
-                        <div class="text-[10px] font-bold text-[#8a8398] tracking-wider uppercase mb-1">Ticket ID</div>
-                        <div class="font-bold text-base text-[#1a1440] font-mono mb-2">${entry ? entry.id : ''}</div>
-                        <div class="text-xs text-[#4a4460] font-medium">${entry ? entry.firstName : ''} ${entry ? entry.middleName || '' : ''} ${entry ? entry.lastName : ''}</div>
-                        <div class="text-xs text-[#8a8398] mt-0.5">+${entry ? entry.phone : ''}</div>
+                    <div class="bg-white border border-[#eee3d0] rounded-xl p-5 text-left mb-6">
+                        <div class="text-xs text-[#8a8398]">Ticket ID</div>
+                        <div class="font-bold text-lg text-[#1a1440] mb-2">${entry ? entry.id : 'N/A'}</div>
+                        <div class="text-sm text-[#4a4460]">${entry ? `${entry.firstName} ${entry.middleName || ''} ${entry.lastName}` : ''}</div>
+                        <div class="text-sm text-[#4a4460]">+${entry ? entry.phone : ''}</div>
                     </div>
-                    <button onclick="router.navigate('billboard')" class="bg-[#1a1440] hover:bg-[#2a2260] text-white font-semibold text-xs px-6 py-3 rounded-xl transition-all shadow-sm">
+                    <button onclick="router.navigate('billboard')" class="bg-[#1a1440] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#2a2260]">
                         Back to Billboard
                     </button>
                 </div>
@@ -729,7 +693,7 @@
                             <span class="font-bold text-[#1a1440]">${res.id}</span>
                             <span class="text-xs font-semibold text-${res.status === 'approved' ? 'green-700 bg-green-100' : 'amber-700 bg-amber-100'} px-2 py-0.5 rounded uppercase">${res.status}</span>
                         </div>
-                        <div class="text-sm text-[#4a4460]">${res.firstName} ${res.middleName} ${res.lastName}</div>
+                        <div class="text-sm text-[#4a4460]">${res.firstName} ${res.middleName || ''} ${res.lastName}</div>
                         <div class="text-xs text-[#8a8398] mt-1">Phone: +${res.phone}</div>
                     </div>
                 `;
@@ -828,9 +792,9 @@
                 }
             }
 
-            let timeLeft = 60;
+            let timeLeft = 60; // 1 minute delay
             const shufflingPool = approvedEntries.map(e => `${e.id} - ${e.firstName} ${e.lastName} (+${e.phone})`);
-
+            
             const shuffleInterval = setInterval(() => {
                 const randomText = shufflingPool[Math.floor(Math.random() * shufflingPool.length)] || "Verifying ticket entries...";
                 const containerEl = document.getElementById('draw-animation-container');
@@ -849,10 +813,10 @@
                 if (timeLeft <= 0) {
                     clearInterval(countdownTimer);
                     clearInterval(shuffleInterval);
-
+                    
                     const shuffled = [...approvedEntries].sort(() => 0.5 - Math.random());
                     const selectedWinners = shuffled.slice(0, Math.min(4, shuffled.length));
-
+                    
                     while (selectedWinners.length < 4 && approvedEntries.length > 0) {
                         selectedWinners.push(approvedEntries[Math.floor(Math.random() * approvedEntries.length)]);
                     }
@@ -866,22 +830,6 @@
                         quote: idx === 0 ? "A life-changing moment! Thank you Yemane Digital Lottery." : undefined
                     }));
 
-                    // Save winners to Firestore collection as well
-                    selectedWinners.forEach((w, idx) => {
-                        const winnerData = {
-                            id: w.id,
-                            firstName: w.firstName,
-                            middleName: w.middleName || "",
-                            lastName: w.lastName,
-                            phone: w.phone,
-                            draw: idx === 0 ? "Grand Live Draw" : "Special Live Draw",
-                            prize: idx === 0 ? "200,000 ETB" : idx === 1 ? "150,000 ETB" : idx === 2 ? "100,000 ETB" : "50,000 ETB",
-                            quote: idx === 0 ? "A life-changing moment! Thank you Yemane Digital Lottery." : "",
-                            submittedAt: w.submittedAt
-                        };
-                        db.collection("winners").doc(w.id).set(winnerData).catch(err => console.error(err));
-                    });
-
                     appState.isDrawingInProgress = false;
                     appState.drawProgressText = "";
                     render();
@@ -890,35 +838,32 @@
         }
 
         function resetAllWinners() {
-            // Clear winners from Firestore
-            db.collection("winners").get().then(snapshot => {
-                const batch = db.batch();
-                snapshot.docs.forEach(doc => batch.delete(doc.ref));
-                return batch.commit();
-            }).catch(err => console.error(err));
-
             appState.officialWinners = [];
             appState.dynamicWinners = [];
             render();
         }
 
         function approveEntry(id) {
-            // Optimistic local update so approval reflects immediately regardless of network.
-            appState.entries = appState.entries.map(e => e.id === id ? { ...e, status: "approved" } : e);
-            render();
-            db.collection("entries").doc(id).update({ status: "approved" })
-                .catch((error) => console.error("Error updating status: ", error));
+            if (typeof approveEntryInCloud === 'function') {
+                approveEntryInCloud(id);
+            } else {
+                const entry = appState.entries.find(e => e.id === id);
+                if (entry) {
+                    entry.status = "approved";
+                    render();
+                }
+            }
         }
 
-        // The ONLY path that removes a registered user from the list. Anything the admin
-        // has not explicitly removed here stays visible, even if the Firestore listener
-        // below reconnects, resyncs, or briefly returns incomplete data.
         function removeEntry(id) {
-            removedEntryIds.add(id);
-            appState.entries = appState.entries.filter(e => e.id !== id);
-            render();
-            db.collection("entries").doc(id).delete()
-                .catch((error) => console.error("Error removing document: ", error));
+            if (typeof removeEntryFromCloud === 'function') {
+                removeEntryFromCloud(id);
+            } else {
+                appState.entries = appState.entries.filter(e => e.id !== id);
+                appState.officialWinners = appState.officialWinners.filter(w => w.id !== id);
+                appState.dynamicWinners = appState.dynamicWinners.filter(w => w.id !== id);
+                render();
+            }
         }
 
         function renderAdminDashboard() {
@@ -942,7 +887,7 @@
                             </div>
                         </div>
 
-                        <!-- Conduct Random Draw Section -->
+                        <!-- Conduct Random Draw Section (Integrated with 1-Minute Suspense Delay & Shuffling Animation) -->
                         <div class="bg-[#fcfbfa] border border-[#e8ddc8] rounded-xl p-5 mb-6 text-center shadow-sm">
                             <div class="font-bold text-[#1a1440] flex items-center justify-center gap-1.5 mb-1">
                                 🎲 Conduct Random Draw
@@ -950,7 +895,7 @@
                             <p class="text-xs text-[#6a6480] mb-4">
                                 Randomly select up to 4 distinct winners from the approved participants pool.
                             </p>
-
+                            
                             <button id="execute-draw-btn" onclick="executeRandomDraw()" class="w-full bg-[#1b8a3e] hover:bg-[#167032] text-white font-semibold py-2.5 rounded-xl text-sm transition-colors shadow-sm mb-2.5" ${appState.isDrawingInProgress ? 'disabled' : ''}>
                                 Execute Random Draw
                             </button>
@@ -977,7 +922,7 @@
                                     ${appState.officialWinners.length} / 4
                                 </span>
                             </div>
-
+                            
                             ${appState.officialWinners.length === 0 ? `
                                 <div class="bg-[#fcfbfa] border border-dashed border-[#d8cdb5] rounded-xl py-6 text-center text-xs text-[#8a8398]">
                                     No winners drawn yet.
@@ -991,7 +936,7 @@
                                             <div class="text-xs text-[#6a6480] mb-2">+${w.phone}</div>
                                             <div class="bg-white/80 border border-[#eee3d0] rounded-lg p-2.5 text-xs space-y-1">
                                                 <div><span class="text-[#8a8398]">Code:</span> <span class="font-mono text-[#4c2fae] font-semibold">${w.id}</span></div>
-                                                <div><span class="text-[#8a8398]">Receipt:</span> ${w.fileName || 'N/A'}</div>
+                                                <div><span class="text-[#8a8398]">Receipt:</span> ${w.fileName}</div>
                                                 <div><span class="text-[#8a8398]">Date:</span> ${w.submittedAt}</div>
                                             </div>
                                         </div>
@@ -1002,7 +947,7 @@
 
                         <div>
                             <h2 class="font-bold text-[#1a1440] text-sm mb-3">Registered Users</h2>
-
+                            
                             ${appState.entries.length === 0 ? `
                                 <div class="bg-[#fcfbfa] border border-dashed border-[#d8cdb5] rounded-xl py-8 text-center text-xs text-[#8a8398]">
                                     No registered users found.
@@ -1062,34 +1007,106 @@
                 router.navigate('billboard');
             }
         }
+    </script>
 
+    <!-- Firebase SDK & Database Integration Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAuvNzd5bAWt0L2-aHQ6ggF1TZTuZLAda8",
+            authDomain: "yemane-digital.firebaseapp.com",
+            projectId: "yemane-digital",
+            storageBucket: "yemane-digital.firebasestorage.app",
+            messagingSenderId: "451594378938",
+            appId: "1:451594378938:web:d6b168c0cda33cd895ac83",
+            measurementId: "G-5KGW7XPWWZ"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // Fetch all lottery entries from Firestore
+        async function loadEntriesFromFirebase() {
+            try {
+                const querySnapshot = await getDocs(collection(db, "lotteryEntries"));
+                appState.entries = [];
+                querySnapshot.forEach((documentSnapshot) => {
+                    appState.entries.push({
+                        docId: documentSnapshot.id,
+                        ...documentSnapshot.data()
+                    });
+                });
+                if (typeof render === 'function' && (appState.page === 'billboard' || appState.page === 'adminDashboard')) {
+                    render();
+                }
+            } catch (e) {
+                console.error("Error loading entries from Firestore:", e);
+            }
+        }
+
+        // Save a new entry to Firestore collection 'lotteryEntries'
+        submitRegistrationToCloud = async function(participantData) {
+            try {
+                const docRef = await addDoc(collection(db, "lotteryEntries"), {
+                    id: participantData.id,
+                    firstName: participantData.firstName,
+                    middleName: participantData.middleName || "",
+                    lastName: participantData.lastName,
+                    phone: participantData.phone,
+                    draw: participantData.draw,
+                    fileName: participantData.fileName,
+                    fileData: participantData.fileData,
+                    status: "pending",
+                    submittedAt: participantData.submittedAt
+                });
+
+                appState.statusResult = participantData;
+                appState.registerForm = { firstName: "", middleName: "", lastName: "", phone: "", draw: "", fileName: "", fileData: "", error: "" };
+                
+                await loadEntriesFromFirebase();
+                router.navigate('statusConfirm');
+            } catch (e) {
+                console.error("Error writing document to Firestore:", e);
+                appState.registerForm.error = "Cloud submission failed. Please check your connection.";
+                render();
+            }
+        };
+
+        // Approve entry status in Firestore
+        approveEntryInCloud = async function(ticketId) {
+            try {
+                const targetEntry = appState.entries.find(e => e.id === ticketId);
+                if (targetEntry && targetEntry.docId) {
+                    const entryRef = doc(db, "lotteryEntries", targetEntry.docId);
+                    await updateDoc(entryRef, { status: "approved" });
+                    await loadEntriesFromFirebase();
+                }
+            } catch (e) {
+                console.error("Error updating entry status:", e);
+            }
+        };
+
+        // Remove entry from Firestore
+        removeEntryFromCloud = async function(ticketId) {
+            try {
+                const targetEntry = appState.entries.find(e => e.id === ticketId);
+                if (targetEntry && targetEntry.docId) {
+                    const entryRef = doc(db, "lotteryEntries", targetEntry.docId);
+                    await deleteDoc(entryRef);
+                    await loadEntriesFromFirebase();
+                }
+            } catch (e) {
+                console.error("Error deleting entry from Firestore:", e);
+            }
+        };
+
+        // Initial load on startup
         window.addEventListener('DOMContentLoaded', () => {
-            // Real-time synchronization listener with Firestore.
-            // This is additive/merge-only: it can add or update entries, but it can NEVER
-            // cause an entry to disappear from view. The only way an entry leaves the list
-            // is via the admin explicitly calling removeEntry() above.
-            db.collection("entries").orderBy("submittedAt", "desc").onSnapshot((snapshot) => {
-                const serverEntries = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }))
-                    .filter(e => !removedEntryIds.has(e.id)); // never resurrect something the admin removed
-                const serverIds = new Set(serverEntries.map(e => e.id));
-                const localOnly = appState.entries.filter(e => !serverIds.has(e.id) && !removedEntryIds.has(e.id));
-                appState.entries = [...localOnly, ...serverEntries];
-                render();
-            }, (error) => {
-                console.error("Error fetching entries: ", error);
-            });
-
-            db.collection("winners").onSnapshot((snapshot) => {
-                appState.officialWinners = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                appState.dynamicWinners = appState.officialWinners;
-                render();
-            }, (error) => {
-                console.error("Error fetching winners: ", error);
-            });
-
-            // Initial render call on window load to ensure page content populates immediately
-            render();
+            loadEntriesFromFirebase();
         });
     </script>
 </body>
