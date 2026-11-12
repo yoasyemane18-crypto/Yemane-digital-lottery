@@ -43,13 +43,15 @@ small{opacity:.7}.hide{display:none}
 
 <div class="card" id="p-verify">
  <h2>Face Verification</h2>
- <input id="vid" placeholder="National ID">
+ <input id="vid" inputmode="numeric" placeholder="Fayda ID (FIN 12 / FAN 16 digits)">
+ <button class="btn sec fay" id="vfay">🇪🇹 Sign in with Fayda</button>
  <button class="btn" id="vbtn" disabled>Verify my face</button><div class="msg" id="vmsg"></div>
 </div>
 
 <div class="card hide" id="p-register">
  <h2>Register Voter</h2>
- <input id="rid" placeholder="National ID"><input id="rname" placeholder="Full name">
+ <input id="rid" inputmode="numeric" placeholder="Fayda ID (FIN 12 / FAN 16 digits)"><input id="rname" placeholder="Full name">
+ <button class="btn sec fay" id="rfay">🇪🇹 Link with Fayda ID</button>
  <button class="btn" id="rbtn" disabled>Capture face &amp; Register</button><div class="msg" id="rmsg"></div>
 </div>
 
@@ -118,16 +120,63 @@ async function getDescriptor(){
 const dist=(a,b)=>Math.hypot(...a.map((x,i)=>x-b[i]));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
+
+/* ===== Fayda (Ethiopian National ID) via eSignet OIDC =====
+   Fill these after NIDP onboarding at id.gov.et. Leave enabled:false for demo mode
+   (format check only — NOT verified against the national database). */
+const FAYDA={enabled:false,
+  authorizeUrl:'',            // eSignet authorization endpoint given by NIDP
+  clientId:'',                // your registered client_id
+  redirectUri:location.origin+location.pathname,
+  backend:'',                 // e.g. https://your-server.com  (runs fayda_backend.py)
+  scope:'openid profile', acr:'mosip:idp:acr:generated-code'}; // only ACRs you are approved for
+const ID_RE=/^(\d{12}|\d{16})$/;   // FIN 12 digits / FAN 16 digits — confirm in NIDP docs
+let fayda=null; // {id, sub, name} after successful Fayda login
+const b64u=u=>btoa(String.fromCharCode(...u)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+async function faydaLogin(mode){
+  const id=(mode==='register'?$('rid'):$('vid')).value.trim(),m=mode==='register'?$('rmsg'):$('vmsg');
+  if(!ID_RE.test(id))return msg(m,'err','Enter a valid Fayda FIN (12 digits) or FAN (16 digits).');
+  const verifier=b64u(crypto.getRandomValues(new Uint8Array(32))),state=b64u(crypto.getRandomValues(new Uint8Array(16)));
+  const challenge=b64u(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(verifier))));
+  sessionStorage.fv_pending=JSON.stringify({mode,id,name:$('rname').value,verifier,state});
+  location.href=FAYDA.authorizeUrl+'?'+new URLSearchParams({response_type:'code',client_id:FAYDA.clientId,
+    redirect_uri:FAYDA.redirectUri,scope:FAYDA.scope,state,acr_values:FAYDA.acr,
+    code_challenge:challenge,code_challenge_method:'S256'});
+}
+async function faydaCallback(){
+  const q=new URLSearchParams(location.search),code=q.get('code');if(!code)return;
+  const p=JSON.parse(sessionStorage.fv_pending||'null');history.replaceState({},'',location.pathname);
+  const m=p&&p.mode==='register'?$('rmsg'):$('vmsg');if(p)tab(p.mode);
+  try{
+    if(!p||p.state!==q.get('state'))throw new Error('Invalid login state. Try again.');
+    const r=await (await fetch(FAYDA.backend+'/fayda/exchange',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({code,code_verifier:p.verifier,redirect_uri:FAYDA.redirectUri})})).json();
+    if(!r.sub)throw new Error(r.error||'Fayda login failed.');
+    fayda={id:p.id,sub:r.sub,name:r.name||p.name,birthdate:r.birthdate,gender:r.gender};
+    $('rid').value=$('vid').value=p.id;$('rname').value=fayda.name||'';
+    msg(m,'ok','✔ Fayda verified: '+[fayda.name,fayda.birthdate,fayda.gender].filter(Boolean).join(' • ')+'. Now complete the face step.');
+  }catch(e){msg(m,'err',e.message)}
+  sessionStorage.removeItem('fv_pending');
+}
+if(FAYDA.enabled){$('rname').readOnly=true;$('rname').placeholder='Name (auto-filled from Fayda)'}
+$('rfay').onclick=()=>faydaLogin('register');$('vfay').onclick=()=>faydaLogin('verify');
+if(!FAYDA.enabled){document.querySelectorAll('.fay').forEach(b=>b.classList.add('hide'));
+  msg($('vmsg'),'info','Demo mode: Fayda ID format is checked, but not verified against the national ID system.')}
+
 $('rbtn').onclick=async()=>{
   const id=$('rid').value.trim(),name=$('rname').value.trim(),m=$('rmsg');
   if(!id||!name)return msg(m,'err','ID and name required.');
+  if(!ID_RE.test(id))return msg(m,'err','Enter a valid Fayda FIN (12 digits) or FAN (16 digits).');
+  if(FAYDA.enabled){if(!fayda||fayda.id!==id)return msg(m,'err','Link your Fayda ID first.');
+    if(Object.values(store.voters).some(o=>o.sub===fayda.sub))return msg(m,'err','This Fayda identity is already registered.');
+    if(fayda.birthdate){const a=(Date.now()-new Date(fayda.birthdate))/31557600000;if(a<18)return msg(m,'err','You must be 18 or older to register.');}}
   const vs=store.voters; if(vs[id])return msg(m,'err','This ID is already registered.');
   $('rbtn').disabled=true;
   try{
     const ds=[];
     for(let i=0;i<5;i++){msg(m,'info',`Capturing sample ${i+1}/5 — hold still, slightly turn your head`);ds.push(await getDescriptor());await sleep(600)}
     for(const [oid,o] of Object.entries(vs)) if(o.descs.some(d=>ds.some(x=>dist(d,x)<THRESH))) throw new Error('This face is already registered under another ID.');
-    vs[id]={name,descs:ds,voted:false};store.voters=vs;
+    vs[id]={name:fayda?fayda.name:name,descs:ds,voted:false,sub:fayda?fayda.sub:null,birthdate:fayda?fayda.birthdate:null,gender:fayda?fayda.gender:null};store.voters=vs;
     msg(m,'ok','✔ Registered! You can now verify.');$('rid').value=$('rname').value='';
   }catch(e){msg(m,'err',e.message)}
   $('rbtn').disabled=false;
@@ -138,6 +187,7 @@ $('vbtn').onclick=async()=>{
   $('tag').style.display='none';
   if(!voter)return msg(m,'err','Unknown voter ID.');
   if(voter.voted)return msg(m,'err','This voter has already voted.');
+  if(FAYDA.enabled&&(!fayda||fayda.id!==id||fayda.sub!==voter.sub))return msg(m,'err','Sign in with Fayda first (must match this ID).');
   $('vbtn').disabled=true;msg(m,'info','Scanning face…');
   try{
     const d=await getDescriptor(),best=Math.min(...voter.descs.map(x=>dist(x,d)));
@@ -173,5 +223,5 @@ function renderResults(){
 $('reset').onclick=()=>{if(confirm('Delete ALL voters and votes?')){localStorage.removeItem('fv_voters');localStorage.removeItem('fv_cands');renderResults()}};
 window.addEventListener('storage',()=>{if(!$('p-results').classList.contains('hide'))renderResults()});
 setInterval(()=>{if(!$('p-results').classList.contains('hide'))renderResults()},3000);
-init();
+init();faydaCallback();
 </script></body></html>
