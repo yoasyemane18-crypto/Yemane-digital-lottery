@@ -1,1129 +1,177 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yemane Digital Lottery</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons CDN -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        .input {
-            width: 100%;
-            border: 1px solid #d8cdb5;
-            border-radius: 0.5rem;
-            padding: 0.65rem 0.75rem;
-            font-size: 0.875rem;
-            background: #ffffff;
-            color: #1a1440;
-            outline: none;
-        }
-        .input:focus {
-            border-color: #4c2fae;
-            box-shadow: 0 0 0 2px rgba(76,47,174,0.15);
-        }
-        @keyframes pulse-animation {
-            0% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.02); opacity: 0.85; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        #draw-animation-container {
-            animation: pulse-animation 1.5s infinite;
-        }
-    </style>
-</head>
-<body class="min-h-screen flex flex-col bg-[#FBF6EC]" style="font-family: 'Georgia', 'Times New Roman', serif;">
-
-    <!-- Header -->
-    <header class="border-b border-[#e8ddc8] bg-[#FBF6EC] sticky top-0 z-30">
-        <div class="max-w-6xl mx-auto px-5 py-4 flex items-center justify-between">
-            <button onclick="router.navigate('billboard')" class="flex items-center gap-2 text-[#1a1440] font-bold text-lg tracking-tight">
-                <span class="inline-flex w-6 h-6 rounded-full items-center justify-center text-[#c9971f]">
-                    <i data-lucide="star" width="16" height="16" stroke-width="2.5" fill="#c9971f"></i>
-                </span>
-                Yemane Digital Lottery
-            </button>
-
-            <nav class="hidden md:flex items-center gap-7 text-[15px] text-[#3a3450]">
-                <button onclick="router.navigate('billboard')" id="nav-billboard" class="pb-1 transition-colors hover:text-[#1a1440]">Billboard</button>
-                <button onclick="router.navigate('register')" id="nav-register" class="pb-1 transition-colors hover:text-[#1a1440]">Register</button>
-                <button onclick="router.navigate('winners')" id="nav-winners" class="pb-1 transition-colors hover:text-[#1a1440]">Winners</button>
-                <button onclick="router.navigate('status')" id="nav-status" class="pb-1 transition-colors hover:text-[#1a1440]">Check Status</button>
-                <button onclick="router.navigate(appState.isAdminLoggedIn ? 'adminDashboard' : 'adminLogin')" id="nav-admin" class="px-4 py-2 rounded-full font-bold transition-all bg-[#1a1440] text-white hover:bg-[#2a2260]">
-                    Admin Login
-                </button>
-            </nav>
-
-            <div class="flex items-center gap-3">
-                <button onclick="toggleLang()" class="hidden sm:flex items-center gap-1 text-sm text-[#3a3450] hover:text-[#1a1440]">
-                    <i data-lucide="globe" width="16" height="16"></i>
-                    <span id="lang-label">Amharic</span>
-                </button>
-                <div class="w-8 h-8 rounded-full bg-[#4c2fae] text-white flex items-center justify-center text-sm font-semibold">Y</div>
-                <button class="md:hidden" onclick="toggleMobileMenu()">
-                    <i data-lucide="menu" width="22" height="22" class="text-[#1a1440]"></i>
-                </button>
-            </div>
-        </div>
-        <!-- Mobile Menu -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-[#e8ddc8] px-5 py-3 flex flex-col gap-3 bg-[#FBF6EC]">
-            <button onclick="router.navigate('billboard'); toggleMobileMenu();" class="text-left text-[#3a3450]">Billboard</button>
-            <button onclick="router.navigate('register'); toggleMobileMenu();" class="text-left text-[#3a3450]">Register</button>
-            <button onclick="router.navigate('winners'); toggleMobileMenu();" class="text-left text-[#3a3450]">Winners</button>
-            <button onclick="router.navigate('status'); toggleMobileMenu();" class="text-left text-[#3a3450]">Check Status</button>
-            <button onclick="router.navigate(appState.isAdminLoggedIn ? 'adminDashboard' : 'adminLogin'); toggleMobileMenu();" class="text-left font-bold text-[#1a1440]">Admin Login</button>
-        </div>
-    </header>
-
-    <!-- Main Content Container -->
-    <main id="main-content" class="flex-1 w-full">
-        <!-- Rendered dynamically via JS -->
-    </main>
-
-    <!-- Footer -->
-    <footer class="bg-[#1a1440] text-white mt-6">
-        <div class="max-w-6xl mx-auto px-5 py-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm">
-            <button onclick="router.navigate('billboard')" class="font-bold flex items-center gap-2">
-                <i data-lucide="star" width="14" height="14" fill="#d4a017" class="text-[#d4a017]"></i> Yemane Digital Lottery
-            </button>
-            
-            <!-- Connected Messaging Links -->
-            <div class="flex items-center gap-3">
-                <a href="imo://chat?phone=+251939383425" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
-                    IMO
-                </a>
-                <a href="https://wa.me/251939383425" target="_blank" class="bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
-                    WhatsApp
-                </a>
-                <a href="https://t.me/+251939383425" target="_blank" class="bg-sky-500 hover:bg-sky-600 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition flex items-center gap-1">
-                    Telegram
-                </a>
-            </div>
-
-            <div class="flex gap-5 text-[#c9c4dd]">
-                <span class="cursor-default">Contact Us</span>
-                <span class="cursor-default">Terms of Service</span>
-                <span class="cursor-default">Privacy Policy</span>
-                <span class="cursor-default">FAQ</span>
-            </div>
-            <div class="text-[#8a83a8] text-xs">© 2026 Yemane Digital Lottery.</div>
-        </div>
-    </footer>
-
-    <!-- Lightbox Modal for Receipt Image Preview -->
-    <div id="image-modal" onclick="closeImageModal()" class="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 hidden">
-        <div class="relative max-w-2xl w-full bg-white rounded-2xl overflow-hidden p-3" onclick="event.stopPropagation()">
-            <div class="flex justify-between items-center mb-2 px-2">
-                <span id="modal-image-title" class="text-sm font-bold text-[#1a1440]">Receipt Preview</span>
-                <button onclick="closeImageModal()" class="text-gray-500 hover:text-black font-bold text-lg px-2">×</button>
-            </div>
-            <img id="modal-image-src" src="" alt="Receipt Preview" class="w-full max-h-[75vh] object-contain rounded-lg border border-[#e8ddc8]" />
-        </div>
-    </div>
-
-    <!-- App Logic Script -->
-    <script>
-        const seedWinners = [];
-
-        // Helper function to load the persistent draw date safely from localStorage or use default
-        function getStoredDrawDate() {
-            const saved = localStorage.getItem('yemane_admin_draw_date');
-            return saved ? saved : "2026-09-08T22:33:00";
-        }
-
-        let appState = {
-            page: "billboard",
-            lang: "en",
-            entries: [],
-            officialWinners: [],
-            dynamicWinners: [],
-            preselectDraw: "",
-            billboardSearchQuery: "",
-            isAdminLoggedIn: false,
-            adminShowPassword: false,
-            adminEmail: "",
-            adminPassword: "",
-            adminRemember: false,
-            adminLoginError: "",
-            registerForm: { firstName: "", middleName: "", lastName: "", phone: "", draw: "", fileName: "", fileData: "", error: "" },
-            drawDateStr: getStoredDrawDate(), // Loaded from localStorage
-            isDrawingInProgress: false,
-            drawProgressText: ""
-        };
-
-        let countdownTimerInterval = null;
-
-        function genTicketId() {
-            return `LOT-${Math.random().toString(36).substring(2, 8).toUpperCase()}${Math.floor(10 + Math.random() * 90)}`;
-        }
-
-        const router = {
-            navigate(pageName, param) {
-                appState.page = pageName;
-                if (param && pageName === 'register') {
-                    appState.preselectDraw = param;
-                }
-                render();
-                window.scrollTo(0, 0);
-            }
-        };
-
-        function toggleLang() {
-            appState.lang = appState.lang === "en" ? "am" : "en";
-            document.getElementById("lang-label").innerText = appState.lang === "en" ? "Amharic" : "English";
-            render();
-        }
-
-        function toggleMobileMenu() {
-            const menu = document.getElementById("mobile-menu");
-            menu.classList.toggle("hidden");
-        }
-
-        function openImageModal(url, title) {
-            document.getElementById("modal-image-src").src = url;
-            document.getElementById("modal-image-title").innerText = title || "Receipt Preview";
-            document.getElementById("image-modal").classList.remove("hidden");
-        }
-
-        function closeImageModal() {
-            document.getElementById("image-modal").classList.add("hidden");
-        }
-
-        function formatDisplayDate(isoString) {
-            if (!isoString) return "";
-            const d = new Date(isoString);
-            if (isNaN(d.getTime())) return isoString;
-            const day = String(d.getDate()).padStart(2, '0');
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const year = d.getFullYear();
-            const hours = String(d.getHours()).padStart(2, '0');
-            const mins = String(d.getMinutes()).padStart(2, '0');
-            const secs = String(d.getSeconds()).padStart(2, '0');
-            return `${day}/${month}/${year}, ${hours}:${mins}:${secs}`;
-        }
-
-        function startCountdownTimer() {
-            if (countdownTimerInterval) clearInterval(countdownTimerInterval);
-
-            function updateClock() {
-                // Ensure we read latest from localStorage/appState
-                const currentDrawStr = getStoredDrawDate();
-                const targetTime = new Date(currentDrawStr).getTime();
-                const now = new Date().getTime();
-                const diff = targetTime - now;
-
-                const daysEl = document.getElementById("timer-days");
-                const hoursEl = document.getElementById("timer-hours");
-                const minsEl = document.getElementById("timer-mins");
-                const secsEl = document.getElementById("timer-secs");
-
-                if (!daysEl || !hoursEl || !minsEl || !secsEl) return;
-
-                if (diff <= 0) {
-                    daysEl.innerText = "00";
-                    hoursEl.innerText = "00";
-                    minsEl.innerText = "00";
-                    secsEl.innerText = "00";
-                    return;
-                }
-
-                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-                const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                const secs = Math.floor((diff % (1000 * 60)) / 1000);
-
-                daysEl.innerText = String(days).padStart(2, '0');
-                hoursEl.innerText = String(hours).padStart(2, '0');
-                minsEl.innerText = String(mins).padStart(2, '0');
-                secsEl.innerText = String(secs).padStart(2, '0');
-            }
-
-            updateClock();
-            countdownTimerInterval = setInterval(updateClock, 1000);
-        }
-
-        function render() {
-            if (countdownTimerInterval) clearInterval(countdownTimerInterval);
-            const main = document.getElementById("main-content");
-            updateNavActiveState();
-
-            // Sync appState drawDateStr with storage on every render
-            appState.drawDateStr = getStoredDrawDate();
-
-            switch (appState.page) {
-                case "billboard":
-                    main.innerHTML = renderBillboard();
-                    setTimeout(startCountdownTimer, 50);
-                    break;
-                case "register":
-                    main.innerHTML = renderRegister();
-                    break;
-                case "statusConfirm":
-                    main.innerHTML = renderConfirmation();
-                    break;
-                case "winners":
-                    main.innerHTML = renderWinners();
-                    break;
-                case "adminLogin":
-                    main.innerHTML = renderAdminLogin();
-                    break;
-                case "adminDashboard":
-                    main.innerHTML = renderAdminDashboard();
-                    break;
-                case "status":
-                    main.innerHTML = renderStatusCheck();
-                    break;
-                default:
-                    main.innerHTML = renderBillboard();
-                    setTimeout(startCountdownTimer, 50);
-            }
-            lucide.createIcons();
-        }
-
-        function updateNavActiveState() {
-            const adminBtn = document.getElementById("nav-admin");
-            if (adminBtn) {
-                adminBtn.innerText = appState.isAdminLoggedIn ? "Admin Dashboard" : "Admin Login";
-            }
-        }
-
-        function renderBillboard() {
-            const query = appState.billboardSearchQuery.trim().toLowerCase();
-            const matchedEntry = query ? appState.entries.find(e => 
-                e.id.toLowerCase() === query || 
-                e.phone.toLowerCase().includes(query) || 
-                `${e.firstName} ${e.middleName || ''} ${e.lastName}`.toLowerCase().includes(query)
-            ) : null;
-
-            const formattedDrawDate = formatDisplayDate(appState.drawDateStr);
-
-            return `
-                <div class="max-w-md mx-auto px-4 py-8">
-                    <!-- Top notification/intro box -->
-                    <div class="bg-white rounded-2xl border border-[#e8ddc8] p-4 text-center shadow-sm mb-5">
-                        <div class="inline-flex items-center gap-1.5 bg-[#f4f1fb] text-[#7a3fd6] text-[11px] font-bold px-3 py-1 rounded-full mb-2 border border-[#e3d8f0]">
-                            <span>⚡</span> Winners & Draws
-                        </div>
-                        <p class="text-xs text-[#6a6480]">
-                            Browse the latest completed draws, discover the lucky winners, and stay ready for the next round.
-                        </p>
-                    </div>
-
-                    <!-- Upcoming Draws Main Card -->
-                    <div class="bg-white rounded-3xl border border-[#e8ddc8] p-5 shadow-sm relative overflow-hidden mb-5">
-                        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#4c2fae] via-[#b652c5] to-[#e66c94]"></div>
-                        
-                        <div class="text-[11px] font-bold text-[#7a3fd6] tracking-wider uppercase mb-1">DRAW #1</div>
-                        <h2 class="text-base font-bold text-[#1a1440] mb-3">የማነ ድጅታል ዕጣ - በ 1000 ብር</h2>
-
-                        <!-- Prize Tiers breakdown -->
-                        <div class="space-y-1.5 text-xs text-[#4a4460] mb-4">
-                            <div class="flex justify-between"><span>1ኛ. ዕጣ 200,000 Birr</span></div>
-                            <div class="flex justify-between"><span>2ኛ. ዕጣ 150,000 Birr</span></div>
-                            <div class="flex justify-between"><span>3ኛ. ዕጣ 100,000 Birr</span></div>
-                            <div class="flex justify-between"><span>4ኛ. ዕጣ 50,000 Birr</span></div>
-                        </div>
-
-                        <!-- Trophy banner -->
-                        <div class="bg-[#fef9e7] border border-[#f3d980] rounded-xl py-2 px-3 text-center text-xs font-semibold text-[#8a6d10] mb-4 flex items-center justify-center gap-2">
-                            <span>🏆</span> ዕድልዎን ይመኩሩ
-                        </div>
-
-                        <!-- Participants & Max Winners badges -->
-                        <div class="flex items-center justify-center gap-2 mb-4">
-                            <span class="bg-[#f4f1fb] text-[#4c2fae] text-[11px] font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 border border-[#e3d8f0]">
-                                👥 ${appState.entries.length} Participants
-                            </span>
-                            <span class="bg-[#fef2f2] text-[#dc2626] text-[11px] font-semibold px-2.5 py-1 rounded-lg flex items-center gap-1 border border-[#fecaca]">
-                                <span>🔥</span> 4 Winners Max
-                            </span>
-                        </div>
-
-                        <!-- Countdown Box -->
-                        <div class="bg-[#fcfbfa] border border-[#e8ddc8] rounded-2xl p-3 text-center mb-5">
-                            <div class="text-[10px] text-[#8a8398] tracking-widest uppercase mb-1">DRAW DATE</div>
-                            <div class="text-xs font-bold text-[#1a1440] mb-3">${formattedDrawDate}</div>
-                            <div class="grid grid-cols-4 gap-2">
-                                <div class="bg-white border border-[#e8ddc8] rounded-xl py-2 shadow-sm">
-                                    <div id="timer-days" class="text-base font-bold text-[#7a3fd6]">--</div>
-                                    <div class="text-[9px] text-[#8a8398] font-bold">DAYS</div>
-                                </div>
-                                <div class="bg-white border border-[#e8ddc8] rounded-xl py-2 shadow-sm">
-                                    <div id="timer-hours" class="text-base font-bold text-[#7a3fd6]">--</div>
-                                    <div class="text-[9px] text-[#8a8398] font-bold">HOURS</div>
-                                </div>
-                                <div class="bg-white border border-[#e8ddc8] rounded-xl py-2 shadow-sm">
-                                    <div id="timer-mins" class="text-base font-bold text-[#7a3fd6]">--</div>
-                                    <div class="text-[9px] text-[#8a8398] font-bold">MINS</div>
-                                </div>
-                                <div class="bg-white border border-[#e8ddc8] rounded-xl py-2 shadow-sm">
-                                    <div id="timer-secs" class="text-base font-bold text-[#7a3fd6]">--</div>
-                                    <div class="text-[9px] text-[#8a8398] font-bold">SECS</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Register Now Button -->
-                        <button onclick="router.navigate('register', 'gena')" class="w-full bg-gradient-to-r from-[#4c2fae] via-[#9d4edd] to-[#e056fd] text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md text-sm">
-                            <span>📝</span> Register Now
-                        </button>
-                    </div>
-
-                    <!-- Bank Account Info Card -->
-                    <div class="bg-gradient-to-br from-[#1a1440] to-[#2d226c] rounded-3xl p-5 text-center text-white shadow-md mb-5 relative overflow-hidden">
-                        <div class="w-10 h-10 mx-auto mb-2 bg-white/10 rounded-xl flex items-center justify-center border border-white/20">
-                            <span class="text-xs font-bold tracking-widest text-[#d4a017]">CBE</span>
-                        </div>
-                        <div class="text-lg font-bold tracking-wider mb-1 font-mono">1000309048621</div>
-                        <div class="text-xs text-[#c9c4dd]">Yemane Tsadik</div>
-                    </div>
-
-                    <!-- Connected Social / Payment Contact Links -->
-                    <div class="grid grid-cols-3 gap-2 mb-5">
-                        <a href="imo://chat?phone=+251939383425" class="bg-white border border-[#e8ddc8] rounded-xl py-2.5 px-3 text-center text-xs font-semibold text-[#007aff] flex items-center justify-center gap-1.5 shadow-sm hover:bg-blue-50 transition">
-                            IMO
-                        </a>
-                        <a href="https://wa.me/251939383425" target="_blank" class="bg-white border border-[#e8ddc8] rounded-xl py-2.5 px-3 text-center text-xs font-semibold text-[#16a34a] flex items-center justify-center gap-1.5 shadow-sm hover:bg-green-50 transition">
-                            WhatsApp
-                        </a>
-                        <a href="https://t.me/+251939383425" target="_blank" class="bg-white border border-[#e8ddc8] rounded-xl py-2.5 px-3 text-center text-xs font-semibold text-[#0284c7] flex items-center justify-center gap-1.5 shadow-sm hover:bg-sky-50 transition">
-                            Telegram
-                        </a>
-                    </div>
-
-                    <!-- Search Bar -->
-                    <div class="bg-white rounded-3xl border border-[#e8ddc8] p-5 shadow-sm mb-5">
-                        <div class="flex gap-2 mb-3">
-                            <input id="billboard-search-input" value="${appState.billboardSearchQuery}" oninput="appState.billboardSearchQuery=this.value" placeholder="Search by phone, name, or code..." class="input text-xs" />
-                            <button onclick="render()" class="bg-gradient-to-r from-[#4c2fae] to-[#c05621] text-white px-4 rounded-xl font-semibold text-xs shadow-sm">Search</button>
-                        </div>
-                        <div id="billboard-search-result">
-                            ${query ? (
-                                matchedEntry ? `
-                                    <div class="bg-[#fcfbfa] border border-[#e8ddc8] rounded-2xl p-3 text-xs">
-                                        <div class="flex justify-between items-center mb-1">
-                                            <span class="font-bold text-[#1a1440] font-mono">${matchedEntry.id}</span>
-                                            <span class="font-bold text-[10px] uppercase px-2 py-0.5 rounded ${matchedEntry.status === 'approved' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${matchedEntry.status}</span>
-                                        </div>
-                                        <div class="text-[#4a4460] font-medium">${matchedEntry.firstName} ${matchedEntry.middleName || ''} ${matchedEntry.lastName}</div>
-                                        <div class="text-[#8a8398]">Phone: +${matchedEntry.phone}</div>
-                                    </div>
-                                ` : `
-                                    <div class="text-xs text-red-600 text-center py-2">No matching ticket or registration found.</div>
-                                `
-                            ) : ''}
-                        </div>
-                    </div>
-
-                    <!-- Winners Gallery Button -->
-                    <button onclick="router.navigate('winners')" class="w-full bg-gradient-to-r from-[#d97706] to-[#b45309] hover:from-[#b45309] hover:to-[#92400e] text-white font-semibold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all shadow-md text-sm">
-                        <span>🏆</span> Winners Gallery
-                    </button>
-                </div>
-            `;
-        }
-
-        function renderRegister() {
-            const f = appState.registerForm;
-            return `
-                <div class="max-w-2xl mx-auto px-5 py-10">
-                    <div class="bg-white rounded-2xl border border-[#eee3d0] p-8 relative overflow-hidden">
-                        <div class="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[#4c2fae] to-[#8a6df0]"></div>
-                        <h2 class="text-xl font-bold text-center text-[#1a1440]">Register for Draw</h2>
-                        <p class="text-center text-[#6a6480] text-sm mt-1">ለመመዝገብ</p>
-                        <p class="text-center text-[#8a8398] text-sm mt-2 mb-6">Secure your ticket for the upcoming high-stakes draw.</p>
-
-                        <div class="grid sm:grid-cols-3 gap-4 mb-4">
-                            <div>
-                                <label class="text-xs font-semibold text-[#1a1440] mb-1 block">First Name / ስም</label>
-                                <input id="reg-firstName" value="${f.firstName}" oninput="appState.registerForm.firstName=this.value" placeholder="Enter first name" class="input" />
-                            </div>
-                            <div>
-                                <label class="text-xs font-semibold text-[#1a1440] mb-1 block">Middle Name / የአባት ስም</label>
-                                <input id="reg-middleName" value="${f.middleName}" oninput="appState.registerForm.middleName=this.value" placeholder="Enter middle name" class="input" />
-                            </div>
-                            <div>
-                                <label class="text-xs font-semibold text-[#1a1440] mb-1 block">Last Name / የአያት ስም</label>
-                                <input id="reg-lastName" value="${f.lastName}" oninput="appState.registerForm.lastName=this.value" placeholder="Enter last name" class="input" />
-                            </div>
-                        </div>
-
-                        <div class="grid sm:grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="text-xs font-semibold text-[#1a1440] mb-1 block">Phone Number / ስልክ ቁጥር</label>
-                                <div class="flex">
-                                    <span class="input rounded-r-none bg-[#f6f2e6] w-16 flex items-center justify-center text-[#8a8398]">+251</span>
-                                    <input id="reg-phone" value="${f.phone}" oninput="appState.registerForm.phone=this.value" placeholder="911 234 567" class="input rounded-l-none flex-1" />
-                                </div>
-                            </div>
-                            <div>
-                                <label class="text-xs font-semibold text-[#1a1440] mb-1 block">Select Active Draw / ዕጣ ይምረጡ</label>
-                                <select id="reg-draw" onchange="appState.registerForm.draw=this.value" class="input">
-                                    <option value="">Choose a draw...</option>
-                                    <option value="Yemane" ${appState.preselectDraw === 'Yemane' ? 'selected' : ''}>Yemane Special Draw — 1000 ETB</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="text-xs font-semibold text-[#1a1440] mb-1 block">Payment Receipt Slip / የክፍያ ደረሰኝ</label>
-                            
-                            <div id="drop-zone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)" class="border-2 border-dashed border-[#d8cdb5] rounded-lg p-5 text-center hover:border-[#4c2fae] transition-colors bg-[#fdfbf5] relative">
-                                <input id="file-input" type="file" accept=".png,.jpg,.jpeg,.pdf" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" onchange="handleFileSelect(event)" />
-                                <div class="pointer-events-none">
-                                    <i data-lucide="upload-cloud" width="26" height="26" class="mx-auto mb-2 text-[#8a8398]"></i>
-                                    <div id="file-name-display" class="text-sm font-medium text-[#1a1440]">${f.fileName || '<span class="text-[#4c2fae] font-medium">Tap to upload receipt</span> or drag and drop'}</div>
-                                    <div class="text-xs text-[#b0a98f] mt-1">PNG, JPG, PDF up to 5MB</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="bg-[#f4f1fb] border border-[#e3d8f0] rounded-lg p-4 flex gap-3 mb-6">
-                            <div class="w-5 h-5 rounded-full bg-[#4c2fae] text-white text-xs flex items-center justify-center flex-shrink-0 mt-0.5">i</div>
-                            <div>
-                                <div class="text-sm font-semibold text-[#1a1440]">Registration Pending</div>
-                                <div class="text-xs text-[#6a6480]">Your submission will be reviewed upon successful receipt upload. An SMS confirmation will be sent.</div>
-                            </div>
-                        </div>
-
-                        <div id="reg-error" class="text-sm text-red-600 mb-4">${f.error}</div>
-
-                        <button onclick="submitRegistration()" class="w-full bg-[#d4a017] hover:bg-[#c2910f] text-[#1a1440] font-semibold py-3 rounded-lg flex items-center justify-center gap-2 transition-colors">
-                            Submit Registration <i data-lucide="arrow-right" width="16" height="16"></i>
-                        </button>
-                        <p class="text-center text-[10px] text-[#b0a98f] mt-4">Demo prototype — no real payment is processed and data is stored securely in Firebase Cloud Firestore.</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        function handleDragOver(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const dropZone = document.getElementById("drop-zone");
-            if (dropZone) dropZone.classList.add("border-[#4c2fae]", "bg-[#f4f1fb]");
-        }
-
-        function handleDragLeave(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const dropZone = document.getElementById("drop-zone");
-            if (dropZone) dropZone.classList.remove("border-[#4c2fae]", "bg-[#f4f1fb]");
-        }
-
-        function handleDrop(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const dropZone = document.getElementById("drop-zone");
-            if (dropZone) dropZone.classList.remove("border-[#4c2fae]", "bg-[#f4f1fb]");
-            const files = e.dataTransfer.files;
-            if (files && files.length > 0) processFile(files[0]);
-        }
-
-        function handleFileSelect(e) {
-            const file = e.target.files[0];
-            if (file) processFile(file);
-        }
-
-        function processFile(file) {
-            if (file.size > 5 * 1024 * 1024) {
-                appState.registerForm.error = "File is larger than 5MB. Please choose a smaller file.";
-                render();
-                return;
-            }
-            const reader = new FileReader();
-            reader.onload = function(uploadEvent) {
-                appState.registerForm.error = "";
-                appState.registerForm.fileName = file.name;
-                appState.registerForm.fileData = uploadEvent.target.result;
-                const display = document.getElementById("file-name-display");
-                if (display) display.innerText = file.name;
-                else render();
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Cloud Firestore Submission Handlers defined globally
-        let submitRegistrationToCloud = null;
-        let approveEntryInCloud = null;
-        let removeEntryFromCloud = null;
-
-        function submitRegistration() {
-            const f = appState.registerForm;
-            const firstNameEl = document.getElementById("reg-firstName");
-            const middleNameEl = document.getElementById("reg-middleName");
-            const lastNameEl = document.getElementById("reg-lastName");
-            const phoneEl = document.getElementById("reg-phone");
-            const drawEl = document.getElementById("reg-draw");
-
-            if (firstNameEl) f.firstName = firstNameEl.value;
-            if (middleNameEl) f.middleName = middleNameEl.value;
-            if (lastNameEl) f.lastName = lastNameEl.value;
-            if (phoneEl) f.phone = phoneEl.value;
-            if (drawEl) f.draw = drawEl.value;
-
-            if (!f.firstName || !f.lastName || !f.phone || !f.draw || !f.fileName) {
-                appState.registerForm.error = "Please fill in all required fields and attach a receipt slip.";
-                render();
-                return;
-            }
-
-            const entry = {
-                id: genTicketId(),
-                firstName: f.firstName,
-                middleName: f.middleName,
-                lastName: f.lastName,
-                phone: f.phone,
-                draw: f.draw,
-                fileName: f.fileName,
-                fileData: f.fileData || "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=600&auto=format&fit=crop&q=80",
-                status: "pending",
-                submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 19)
-            };
-
-            if (typeof submitRegistrationToCloud === 'function') {
-                submitRegistrationToCloud(entry);
-            } else {
-                appState.entries.unshift(entry);
-                appState.statusResult = entry;
-                appState.registerForm = { firstName: "", middleName: "", lastName: "", phone: "", draw: "", fileName: "", fileData: "", error: "" };
-                router.navigate('statusConfirm');
-            }
-        }
-
-        function renderConfirmation() {
-            const entry = appState.statusResult;
-            return `
-                <div class="max-w-lg mx-auto px-5 py-16 text-center">
-                    <div class="w-16 h-16 rounded-full bg-[#f4f1fb] text-[#4c2fae] flex items-center justify-center mx-auto mb-5">
-                        <i data-lucide="check" width="30" height="30"></i>
-                    </div>
-                    <h2 class="text-xl font-bold text-[#1a1440] mb-2">Registration submitted to cloud</h2>
-                    <p class="text-[#6a6480] mb-6">
-                        Your entry is <span class="font-semibold text-[#8a6d10]">pending</span> admin approval. Keep your ticket number to check status any time.
-                    </p>
-                    <div class="bg-white border border-[#eee3d0] rounded-xl p-5 text-left mb-6">
-                        <div class="text-xs text-[#8a8398]">Ticket ID</div>
-                        <div class="font-bold text-lg text-[#1a1440] mb-2">${entry ? entry.id : 'N/A'}</div>
-                        <div class="text-sm text-[#4a4460]">${entry ? `${entry.firstName} ${entry.middleName || ''} ${entry.lastName}` : ''}</div>
-                        <div class="text-sm text-[#4a4460]">+${entry ? entry.phone : ''}</div>
-                    </div>
-                    <button onclick="router.navigate('billboard')" class="bg-[#1a1440] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[#2a2260]">
-                        Back to Billboard
-                    </button>
-                </div>
-            `;
-        }
-
-        function renderWinners() {
-            const currentWinnersPool = appState.dynamicWinners.length > 0 ? appState.dynamicWinners : seedWinners;
-            const [grand, ...rest] = currentWinnersPool;
-
-            return `
-                <div class="max-w-6xl mx-auto px-5 py-10 text-center">
-                    <h1 class="text-2xl font-bold text-[#1a1440]">Past Winners</h1>
-                    <p class="text-lg font-semibold text-[#7a3fd6] mt-1">ያለፉ አሸናፊዎች</p>
-                    <p class="text-[#6a6480] mt-2 mb-8">Celebrating the lucky individuals who struck gold with Yemane Digital Lottery. Will you be next?</p>
-
-                    ${currentWinnersPool.length === 0 ? `
-                        <div class="bg-white rounded-2xl border border-[#eee3d0] p-10 text-center text-sm text-[#8a8398] max-w-md mx-auto">
-                            No winners have been officially drawn for this cycle yet. Stay tuned!
-                        </div>
-                    ` : `
-                        <div class="grid md:grid-cols-2 gap-5 text-left">
-                            ${grand ? `
-                            <div class="bg-white rounded-xl border border-[#eee3d0] p-6 md:col-span-1 flex gap-4">
-                                <div class="w-14 h-14 rounded-full bg-[#f3d980] flex items-center justify-center flex-shrink-0">
-                                    <i data-lucide="award" class="text-[#8a6d10]" width="26" height="26"></i>
-                                </div>
-                                <div>
-                                    <div class="text-xs font-semibold text-[#7a3fd6]">GRAND PRIZE WINNER • ${(grand.draw || "LATEST DRAW").toUpperCase()}</div>
-                                    <div class="flex items-baseline justify-between gap-3">
-                                        <div class="font-bold text-[#1a1440]">${grand.name || (grand.firstName + ' ' + (grand.middleName || '') + ' ' + grand.lastName)}</div>
-                                        <div class="font-bold text-[#8a6d10]">${grand.prize || '500,000 ETB'}</div>
-                                    </div>
-                                    <div class="text-sm text-[#8a8398]">${grand.amNmae || ''}</div>
-                                    <div class="text-xs text-[#b0a98f]">Ticket: #${grand.id}</div>
-                                    <p class="italic text-sm text-[#4a4460] mt-3 border-t border-[#f0e9d5] pt-3">"${grand.quote || 'A life-changing moment! Thank you Yemane Digital Lottery.'}"</p>
-                                </div>
-                            </div>
-                            ` : ''}
-
-                            ${rest.map((w, idx) => `
-                                <div class="bg-white rounded-xl border border-[#eee3d0] p-6">
-                                    <div class="flex items-center justify-between mb-3">
-                                        <div class="w-9 h-9 rounded-full bg-[#1a1440] text-white flex items-center justify-center">
-                                            <i data-lucide="star" width="16" height="16"></i>
-                                        </div>
-                                        <div class="text-xs text-[#8a8398]">${w.draw || 'Official Draw'}</div>
-                                    </div>
-                                    <div class="font-bold text-[#1a1440]">${w.name || (w.firstName + ' ' + (w.middleName || '') + ' ' + w.lastName)}</div>
-                                    <div class="text-sm text-[#8a8398] mb-3">${w.amNmae || ''}</div>
-                                    <div class="bg-[#f4f1fb] rounded-lg text-center py-3 mb-2">
-                                        <div class="text-xs text-[#8a8398]">Prize Amount</div>
-                                        <div class="font-bold text-[#4c2fae]">${w.prize || (idx === 0 ? '150,000 ETB' : idx === 1 ? '100,000 ETB' : '50,000 ETB')}</div>
-                                    </div>
-                                    <div class="text-xs text-center text-[#b0a98f]">Ticket: #${w.id}</div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    `}
-
-                    <button onclick="router.navigate('register')" class="bg-[#d4a017] hover:bg-[#c2910f] text-[#1a1440] font-semibold px-7 py-3 rounded-full mt-10">
-                        View All Past Draws
-                    </button>
-                </div>
-            `;
-        }
-
-        function renderStatusCheck() {
-            return `
-                <div class="max-w-md mx-auto px-5 py-12">
-                    <div class="bg-white rounded-3xl border border-[#eee3d0] p-8 shadow-sm">
-                        <h2 class="text-xl font-bold text-[#1a1440] mb-2 text-center">Check Ticket Status</h2>
-                        <p class="text-xs text-[#8a8398] text-center mb-6">Enter your Ticket ID to verify status</p>
-                        <div class="flex gap-2 mb-4">
-                            <input id="status-query" placeholder="e.g. LOT-J8ISVA3G" class="input" />
-                            <button onclick="checkTicketStatus()" class="bg-[#1a1440] text-white px-4 rounded-lg font-semibold text-sm">Search</button>
-                        </div>
-                        <div id="status-display-area"></div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function checkTicketStatus() {
-            const q = document.getElementById("status-query").value.trim();
-            const res = appState.entries.find(e => e.id.toLowerCase() === q.toLowerCase()) || null;
-            const area = document.getElementById("status-display-area");
-            if (res) {
-                area.innerHTML = `
-                    <div class="bg-[#f9f6ed] border border-[#d8cdb5] rounded-xl p-4 mt-4">
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="font-bold text-[#1a1440]">${res.id}</span>
-                            <span class="text-xs font-semibold text-${res.status === 'approved' ? 'green-700 bg-green-100' : 'amber-700 bg-amber-100'} px-2 py-0.5 rounded uppercase">${res.status}</span>
-                        </div>
-                        <div class="text-sm text-[#4a4460]">${res.firstName} ${res.middleName || ''} ${res.lastName}</div>
-                        <div class="text-xs text-[#8a8398] mt-1">Phone: +${res.phone}</div>
-                    </div>
-                `;
-            } else {
-                area.innerHTML = `<div class="text-sm text-red-600 text-center mt-4">No ticket found with this ID.</div>`;
-            }
-        }
-
-        function renderAdminLogin() {
-            return `
-                <div class="max-w-md mx-auto px-5 py-12">
-                    <div class="bg-white rounded-3xl border border-[#eee3d0] p-8 shadow-sm relative">
-                        <div class="text-center mb-8">
-                            <div class="w-16 h-16 mx-auto mb-4 bg-[#f4f1fb] rounded-2xl flex items-center justify-center text-3xl shadow-inner">🎰</div>
-                            <h1 class="text-2xl font-bold text-[#1a1440]">Welcome back</h1>
-                            <p class="text-sm text-[#8a8398] mt-1">Sign in to continue to your account</p>
-                        </div>
-
-                        <form onsubmit="handleAdminLogin(event)" class="space-y-5">
-                            <div>
-                                <label class="text-xs font-semibold text-[#1a1440] mb-1.5 block">Email or Username</label>
-                                <div class="flex items-center border border-[#d8cdb5] rounded-xl px-3.5 bg-white focus-within:border-[#4c2fae] transition-all">
-                                    <i data-lucide="mail" width="18" height="18" class="text-[#8a8398] mr-2.5 flex-shrink-0"></i>
-                                    <input type="text" id="admin-email" value="${appState.adminEmail}" oninput="appState.adminEmail=this.value" placeholder="you@example.com" class="w-full py-3 text-sm outline-none bg-transparent text-[#1a1440]" />
-                                </div>
-                            </div>
-
-                            <div>
-                                <label class="text-xs font-semibold text-[#1a1440] mb-1.5 block">Password</label>
-                                <div class="flex items-center border border-[#d8cdb5] rounded-xl px-3.5 bg-white focus-within:border-[#4c2fae] transition-all">
-                                    <i data-lucide="lock" width="18" height="18" class="text-[#8a8398] mr-2.5 flex-shrink-0"></i>
-                                    <input type="${appState.adminShowPassword ? 'text' : 'password'}" id="admin-password" value="${appState.adminPassword}" oninput="appState.adminPassword=this.value" placeholder="••••••••" class="w-full py-3 text-sm outline-none bg-transparent text-[#1a1440]" />
-                                    <button type="button" onclick="toggleAdminPassword()" class="text-[#8a8398] hover:text-[#1a1440] ml-2 focus:outline-none">
-                                        <i data-lucide="${appState.adminShowPassword ? 'eye-off' : 'eye'}" width="18" height="18"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="text-xs text-red-600 font-medium">${appState.adminLoginError}</div>
-
-                            <button type="submit" class="w-full bg-[#1a1440] hover:bg-[#2a2260] text-white font-semibold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-colors shadow-md text-sm mt-2">
-                                → LOG IN
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            `;
-        }
-
-        function toggleAdminPassword() {
-            appState.adminShowPassword = !appState.adminShowPassword;
-            render();
-        }
-
-        function handleAdminLogin(e) {
-            e.preventDefault();
-            const email = document.getElementById("admin-email").value.trim();
-            const password = document.getElementById("admin-password").value;
-
-            if (email === "hesamyemane21@gmail.com" && password === "yemane@123") {
-                appState.adminLoginError = "";
-                appState.isAdminLoggedIn = true;
-                router.navigate('adminDashboard');
-            } else {
-                appState.adminLoginError = "Invalid email or password.";
-                render();
-            }
-        }
-
-        function handleAdminLogout() {
-            appState.isAdminLoggedIn = false;
-            router.navigate('adminLogin');
-        }
-
-        function executeRandomDraw() {
-            const approvedEntries = appState.entries.filter(e => e.status === 'approved');
-            if (approvedEntries.length === 0) {
-                alert("No approved registered users available for the draw.");
-                return;
-            }
-
-            appState.isDrawingInProgress = true;
-            appState.drawProgressText = "Shuffling approved participants...";
-            render();
-
-            const btn = document.getElementById('execute-draw-btn');
-            if (btn) btn.disabled = true;
-
-            let statusContainer = document.getElementById('draw-animation-container');
-            if (!statusContainer) {
-                statusContainer = document.createElement('div');
-                statusContainer.id = 'draw-animation-container';
-                statusContainer.style.cssText = "margin: 15px 0; padding: 15px; background: #f8f9fa; border: 2px dashed #28a745; text-align: center; border-radius: 8px;";
-                if (btn && btn.parentNode) {
-                    btn.parentNode.insertBefore(statusContainer, btn.nextSibling);
-                }
-            }
-
-            let timeLeft = 60; // 1 minute delay
-            const shufflingPool = approvedEntries.map(e => `${e.id} - ${e.firstName} ${e.lastName} (+${e.phone})`);
-            
-            const shuffleInterval = setInterval(() => {
-                const randomText = shufflingPool[Math.floor(Math.random() * shufflingPool.length)] || "Verifying ticket entries...";
-                const containerEl = document.getElementById('draw-animation-container');
-                if (containerEl) {
-                    containerEl.innerHTML = `
-                        <div class="spinner-border text-success" role="status" style="width: 2rem; height: 2rem;"></div>
-                        <h4 style="color: #28a745; margin-top: 10px;">🎲 Drawing in Progress...</h4>
-                        <p style="font-size: 16px; font-weight: bold; font-family: monospace; color: #333;">${randomText}</p>
-                        <p style="color: #666; font-size: 14px;">Time remaining: <strong>${timeLeft}</strong> seconds</p>
-                    `;
-                }
-            }, 150);
-
-            const countdownTimer = setInterval(() => {
-                timeLeft--;
-                if (timeLeft <= 0) {
-                    clearInterval(countdownTimer);
-                    clearInterval(shuffleInterval);
-                    
-                    const shuffled = [...approvedEntries].sort(() => 0.5 - Math.random());
-                    const selectedWinners = shuffled.slice(0, Math.min(4, shuffled.length));
-                    
-                    while (selectedWinners.length < 4 && approvedEntries.length > 0) {
-                        selectedWinners.push(approvedEntries[Math.floor(Math.random() * approvedEntries.length)]);
-                    }
-
-                    appState.officialWinners = selectedWinners;
-                    appState.dynamicWinners = selectedWinners.map((w, idx) => ({
-                        id: w.id,
-                        name: `${w.firstName} ${w.middleName || ''} ${w.lastName}`,
-                        draw: idx === 0 ? "Grand Live Draw" : "Special Live Draw",
-                        prize: idx === 0 ? "200,000 ETB" : idx === 1 ? "150,000 ETB" : idx === 2 ? "100,000 ETB" : "50,000 ETB",
-                        quote: idx === 0 ? "A life-changing moment! Thank you Yemane Digital Lottery." : undefined
-                    }));
-
-                    appState.isDrawingInProgress = false;
-                    appState.drawProgressText = "";
-                    render();
-                }
-            }, 1000);
-        }
-
-        function resetAllWinners() {
-            appState.officialWinners = [];
-            appState.dynamicWinners = [];
-            render();
-        }
-
-        function approveEntry(id) {
-            if (typeof approveEntryInCloud === 'function') {
-                approveEntryInCloud(id);
-            } else {
-                const entry = appState.entries.find(e => e.id === id);
-                if (entry) {
-                    entry.status = "approved";
-                    render();
-                }
-            }
-        }
-
-        function removeEntry(id) {
-            if (typeof removeEntryFromCloud === 'function') {
-                removeEntryFromCloud(id);
-            } else {
-                appState.entries = appState.entries.filter(e => e.id !== id);
-                appState.officialWinners = appState.officialWinners.filter(w => w.id !== id);
-                appState.dynamicWinners = appState.dynamicWinners.filter(w => w.id !== id);
-                render();
-            }
-        }
-
-        function renderAdminDashboard() {
-            // Get latest from storage for display in input field
-            const currentVal = getStoredDrawDate();
-            return `
-                <div class="max-w-xl mx-auto px-4 py-8">
-                    <div class="bg-white rounded-2xl border border-[#e8ddc8] p-6 shadow-sm">
-                        <div class="flex items-center justify-between mb-6">
-                            <h1 class="text-xl font-bold text-[#1a1440]">Admin Dashboard</h1>
-                            <button onclick="handleAdminLogout()" class="bg-red-50 hover:bg-red-100 text-red-600 text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-colors border border-red-200">
-                                Logout
-                            </button>
-                        </div>
-
-                        <!-- Draw Date Configuration in Admin -->
-                        <div class="bg-[#fcfbfa] border border-[#e8ddc8] rounded-xl p-4 mb-6 shadow-sm">
-                            <div class="font-bold text-[#1a1440] text-xs mb-1">Configure Countdown Draw Date & Time</div>
-                            <p class="text-[11px] text-[#6a6480] mb-3">Update the target draw date to adjust the live countdown timer on the billboard.</p>
-                            <div class="flex gap-2">
-                                <input type="datetime-local" id="admin-draw-date-input" value="${currentVal}" class="input text-xs" />
-                                <button onclick="updateDrawDate(event)" class="bg-[#4c2fae] hover:bg-[#3a228c] text-white px-4 rounded-xl font-semibold text-xs transition-colors shadow-sm">Update Timer</button>
-                            </div>
-                        </div>
-
-                        <!-- Conduct Random Draw Section (Integrated with 1-Minute Suspense Delay & Shuffling Animation) -->
-                        <div class="bg-[#fcfbfa] border border-[#e8ddc8] rounded-xl p-5 mb-6 text-center shadow-sm">
-                            <div class="font-bold text-[#1a1440] flex items-center justify-center gap-1.5 mb-1">
-                                🎲 Conduct Random Draw
-                            </div>
-                            <p class="text-xs text-[#6a6480] mb-4">
-                                Randomly select up to 4 distinct winners from the approved participants pool.
-                            </p>
-                            
-                            <button id="execute-draw-btn" onclick="executeRandomDraw()" class="w-full bg-[#1b8a3e] hover:bg-[#167032] text-white font-semibold py-2.5 rounded-xl text-sm transition-colors shadow-sm mb-2.5" ${appState.isDrawingInProgress ? 'disabled' : ''}>
-                                Execute Random Draw
-                            </button>
-
-                            <div id="draw-animation-container" class="${appState.isDrawingInProgress ? '' : 'hidden'}" style="margin: 15px 0; padding: 15px; background: #f8f9fa; border: 2px dashed #28a745; text-align: center; border-radius: 8px;">
-                                ${appState.isDrawingInProgress ? `
-                                    <div class="spinner-border text-success" role="status" style="width: 2rem; height: 2rem; display: inline-block; border: 0.25em solid #28a745; border-right-color: transparent; border-radius: 50%; animation: spinner-border .75s linear infinite;"></div>
-                                    <h4 style="color: #28a745; margin-top: 10px;">🎲 Drawing in Progress...</h4>
-                                    <p style="font-size: 16px; font-weight: bold; font-family: monospace; color: #333;" id="shuffle-text-display">${appState.drawProgressText}</p>
-                                ` : ''}
-                            </div>
-
-                            <button onclick="resetAllWinners()" class="w-full bg-[#ef4444] hover:bg-[#dc2626] text-white font-semibold py-2 rounded-xl text-xs transition-colors shadow-sm">
-                                Reset All Winners
-                            </button>
-                        </div>
-
-                        <div class="mb-6">
-                            <div class="flex items-center justify-between mb-3">
-                                <div class="font-bold text-[#1a1440] flex items-center gap-1.5 text-sm">
-                                    🏆 Official Winners List
-                                </div>
-                                <span class="bg-[#f4f1fb] text-[#4c2fae] font-semibold text-xs px-2 py-0.5 rounded-full border border-[#e3d8f0]">
-                                    ${appState.officialWinners.length} / 4
-                                </span>
-                            </div>
-                            
-                            ${appState.officialWinners.length === 0 ? `
-                                <div class="bg-[#fcfbfa] border border-dashed border-[#d8cdb5] rounded-xl py-6 text-center text-xs text-[#8a8398]">
-                                    No winners drawn yet.
-                                </div>
-                            ` : `
-                                <div class="space-y-3">
-                                    ${appState.officialWinners.map((w, index) => `
-                                        <div class="bg-gradient-to-r from-[#fef9e7] to-[#fff] border border-[#f3d980] rounded-xl p-4 shadow-sm relative">
-                                            <div class="absolute top-3 right-3 text-xs font-bold text-[#8a6d10]">Winner #${index + 1}</div>
-                                            <div class="font-bold text-[#1a1440] text-sm">${w.firstName} ${w.middleName || ''} ${w.lastName}</div>
-                                            <div class="text-xs text-[#6a6480] mb-2">+${w.phone}</div>
-                                            <div class="bg-white/80 border border-[#eee3d0] rounded-lg p-2.5 text-xs space-y-1">
-                                                <div><span class="text-[#8a8398]">Code:</span> <span class="font-mono text-[#4c2fae] font-semibold">${w.id}</span></div>
-                                                <div><span class="text-[#8a8398]">Receipt:</span> ${w.fileName}</div>
-                                                <div><span class="text-[#8a8398]">Date:</span> ${w.submittedAt}</div>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            `}
-                        </div>
-
-                        <div>
-                            <h2 class="font-bold text-[#1a1440] text-sm mb-3">Registered Users</h2>
-                            
-                            ${appState.entries.length === 0 ? `
-                                <div class="bg-[#fcfbfa] border border-dashed border-[#d8cdb5] rounded-xl py-8 text-center text-xs text-[#8a8398]">
-                                    No registered users found.
-                                </div>
-                            ` : `
-                                <div class="space-y-4">
-                                    ${appState.entries.map(user => `
-                                        <div class="bg-white border border-[#e8ddc8] rounded-2xl p-4 shadow-sm">
-                                            <div class="flex items-start justify-between mb-2">
-                                                <div>
-                                                    <div class="font-bold text-[#1a1440] text-sm">${user.firstName} ${user.middleName || ''} ${user.lastName}</div>
-                                                    <div class="text-xs text-[#6a6480]">+${user.phone}</div>
-                                                </div>
-                                                <span class="${user.status === 'approved' ? 'bg-[#e6f4ea] text-[#137333]' : 'bg-[#fef3c7] text-[#b45309]'} text-[10px] font-bold px-2 py-0.5 rounded tracking-wide uppercase">
-                                                    ${user.status}
-                                                </span>
-                                            </div>
-
-                                            <div class="bg-[#fcfbfa] border border-[#eee3d0] rounded-xl p-3 text-xs space-y-1 mb-3">
-                                                <div><span class="text-[#8a8398]">Code:</span> <span class="font-mono text-[#4c2fae] font-semibold">${user.id}</span></div>
-                                                <div><span class="text-[#8a8398]">Receipt:</span> <button onclick="openImageModal('${user.fileData}', '${user.fileName}')" class="text-[#4c2fae] font-semibold underline hover:text-[#2a2260] inline-flex items-center gap-1">${user.fileName} <i data-lucide="image" width="12" height="12"></i></button></div>
-                                                <div><span class="text-[#8a8398]">Date:</span> ${user.submittedAt}</div>
-                                            </div>
-
-                                            <div class="mb-3 cursor-pointer group rounded-lg overflow-hidden border border-[#e8ddc8] bg-gray-50 h-24 relative" onclick="openImageModal('${user.fileData}', '${user.fileName}')">
-                                                <img src="${user.fileData}" alt="Receipt" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200" />
-                                                <div class="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-semibold gap-1">
-                                                    <i data-lucide="zoom-in" width="14" height="14"></i> Tap to view receipt
-                                                </div>
-                                            </div>
-
-                                            <div class="flex gap-2">
-                                                ${user.status === 'pending' ? `
-                                                    <button onclick="approveEntry('${user.id}')" class="flex-1 bg-[#1b8a3e] hover:bg-[#167032] text-white font-semibold py-2 rounded-xl text-xs transition-colors shadow-sm">
-                                                        Approve Payment
-                                                    </button>
-                                                ` : ''}
-                                                <button onclick="removeEntry('${user.id}')" class="${user.status === 'pending' ? 'flex-1' : 'w-full'} bg-[#ef4444] hover:bg-[#dc2626] text-white font-semibold py-2 rounded-xl text-xs transition-colors shadow-sm">
-                                                    Remove
-                                                </button>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            `}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function updateDrawDate(e) {
-            const val = document.getElementById("admin-draw-date-input").value;
-            if (val) {
-                // Save to localStorage so it persists across refreshes and page reloads
-                localStorage.setItem('yemane_admin_draw_date', val);
-                appState.drawDateStr = val;
-
-                alert("Draw target date updated successfully! The billboard timer will now count down to this new date.");
-                router.navigate('billboard');
-            }
-        }
-    </script>
-
-    <!-- Firebase SDK & Database Integration Module -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-app.js";
-        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics.js";
-        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyAuvNzd5bAWt0L2-aHQ6ggF1TZTuZLAda8",
-            authDomain: "yemane-digital.firebaseapp.com",
-            projectId: "yemane-digital",
-            storageBucket: "yemane-digital.firebasestorage.app",
-            messagingSenderId: "451594378938",
-            appId: "1:451594378938:web:d6b168c0cda33cd895ac83",
-            measurementId: "G-5KGW7XPWWZ"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = getFirestore(app);
-
-        // Fetch all lottery entries from Firestore
-        async function loadEntriesFromFirebase() {
-            try {
-                const querySnapshot = await getDocs(collection(db, "lotteryEntries"));
-                appState.entries = [];
-                querySnapshot.forEach((documentSnapshot) => {
-                    appState.entries.push({
-                        docId: documentSnapshot.id,
-                        ...documentSnapshot.data()
-                    });
-                });
-                if (typeof render === 'function' && (appState.page === 'billboard' || appState.page === 'adminDashboard')) {
-                    render();
-                }
-            } catch (e) {
-                console.error("Error loading entries from Firestore:", e);
-            }
-        }
-
-        // Save a new entry to Firestore collection 'lotteryEntries'
-        submitRegistrationToCloud = async function(participantData) {
-            try {
-                const docRef = await addDoc(collection(db, "lotteryEntries"), {
-                    id: participantData.id,
-                    firstName: participantData.firstName,
-                    middleName: participantData.middleName || "",
-                    lastName: participantData.lastName,
-                    phone: participantData.phone,
-                    draw: participantData.draw,
-                    fileName: participantData.fileName,
-                    fileData: participantData.fileData,
-                    status: "pending",
-                    submittedAt: participantData.submittedAt
-                });
-
-                appState.statusResult = participantData;
-                appState.registerForm = { firstName: "", middleName: "", lastName: "", phone: "", draw: "", fileName: "", fileData: "", error: "" };
-                
-                await loadEntriesFromFirebase();
-                router.navigate('statusConfirm');
-            } catch (e) {
-                console.error("Error writing document to Firestore:", e);
-                appState.registerForm.error = "Cloud submission failed. Please check your connection.";
-                render();
-            }
-        };
-
-        // Approve entry status in Firestore
-        approveEntryInCloud = async function(ticketId) {
-            try {
-                const targetEntry = appState.entries.find(e => e.id === ticketId);
-                if (targetEntry && targetEntry.docId) {
-                    const entryRef = doc(db, "lotteryEntries", targetEntry.docId);
-                    await updateDoc(entryRef, { status: "approved" });
-                    await loadEntriesFromFirebase();
-                }
-            } catch (e) {
-                console.error("Error updating entry status:", e);
-            }
-        };
-
-        // Remove entry from Firestore
-        removeEntryFromCloud = async function(ticketId) {
-            try {
-                const targetEntry = appState.entries.find(e => e.id === ticketId);
-                if (targetEntry && targetEntry.docId) {
-                    const entryRef = doc(db, "lotteryEntries", targetEntry.docId);
-                    await deleteDoc(entryRef);
-                    await loadEntriesFromFirebase();
-                }
-            } catch (e) {
-                console.error("Error deleting entry from Firestore:", e);
-            }
-        };
-
-        // Initial load on startup
-        window.addEventListener('DOMContentLoaded', () => {
-            loadEntriesFromFirebase();
-        });
-    </script>
-</body>
-</html>
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Face Vote</title>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js"></script>
+<style>
+:root{--bg:#050b1f;--card:#0a1536;--line:#2a5bff;--txt:#e8eefc;--ok:#22c55e;--err:#ef4444}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(circle at top,#0b1e5c,#050b1f 60%);color:var(--txt);font-family:system-ui,sans-serif;min-height:100vh}
+header{padding:14px 18px;font-weight:700;font-size:18px;border-bottom:1px solid #1b3a8a}
+nav{display:flex;gap:6px;padding:10px;max-width:480px;margin:auto}
+nav button{flex:1;padding:10px;border:1px solid var(--line);background:transparent;color:var(--txt);border-radius:10px;font-weight:600}
+nav button.on{background:var(--line)}
+.card{max-width:480px;margin:10px auto;padding:18px;border:1px solid var(--line);border-radius:16px;background:var(--card);box-shadow:0 0 24px #2a5bff55}
+h2{margin:0 0 12px}
+input{width:100%;padding:12px;margin:6px 0;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:#fff;font-size:16px}
+.btn{width:100%;padding:14px;margin-top:10px;border:0;border-radius:10px;background:linear-gradient(90deg,#1f6bff,#2a9bff);color:#fff;font-size:17px;font-weight:700}
+.btn:disabled{opacity:.5}.btn.sec{background:#1b2a5c}
+.cam{position:relative;border-radius:12px;overflow:hidden;background:#000;aspect-ratio:4/3}
+.cam video,.cam canvas{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}
+.tag{position:absolute;top:8px;left:50%;transform:translateX(-50%);background:var(--ok);padding:4px 12px;border-radius:8px;font-weight:700;display:none;z-index:2}
+.msg{margin-top:12px;padding:12px;border-radius:10px;display:none}
+.msg.ok{display:block;background:#0b3d1d;border:1px solid var(--ok)}.msg.err{display:block;background:#4a1010;border:1px solid var(--err)}.msg.info{display:block;background:#12224f;border:1px solid var(--line)}
+.cands{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.cand{border:2px solid #1b3a8a;border-radius:12px;padding:10px 4px;text-align:center;cursor:pointer}
+.cand.sel{border-color:#2a9bff;background:#12306f}
+.av{width:56px;height:56px;border-radius:50%;margin:0 auto 6px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700}
+.row{margin:12px 0}.row .top{display:flex;justify-content:space-between}
+.bar{height:12px;border-radius:6px;background:#12224f;overflow:hidden}.bar i{display:block;height:100%;transition:width .5s}
+small{opacity:.7}.hide{display:none}
+</style></head><body>
+<header>🗳️ Face-Verified Voting System</header>
+<nav id="nav">
+ <button data-t="verify" class="on">Verify</button><button data-t="register">Register</button>
+ <button data-t="vote">Vote</button><button data-t="results">Results</button>
+</nav>
+
+<div class="card" id="status"><span id="st">Loading face models…</span></div>
+
+<div class="card" id="cam-card">
+ <div class="cam"><video id="v" playsinline muted autoplay></video><canvas id="ov"></canvas><div class="tag" id="tag">Face Verified ✓</div></div>
+</div>
+
+<div class="card" id="p-verify">
+ <h2>Face Verification</h2>
+ <input id="vid" placeholder="National ID">
+ <button class="btn" id="vbtn" disabled>Verify my face</button><div class="msg" id="vmsg"></div>
+</div>
+
+<div class="card hide" id="p-register">
+ <h2>Register Voter</h2>
+ <input id="rid" placeholder="National ID"><input id="rname" placeholder="Full name">
+ <button class="btn" id="rbtn" disabled>Capture face &amp; Register</button><div class="msg" id="rmsg"></div>
+</div>
+
+<div class="card hide" id="p-vote">
+ <h2>Cast Your Vote</h2><div id="vwho"></div>
+ <div class="cands" id="cands"></div>
+ <button class="btn" id="sbtn">✓ Submit Vote</button><div class="msg" id="smsg"></div>
+</div>
+
+<div class="card hide" id="p-results">
+ <h2>Live Results</h2><div id="res"></div><small id="tot"></small>
+ <button class="btn sec" id="reset">Reset all data (admin)</button>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const MODELS='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model/';
+const THRESH=0.5, COLORS=['#38bdf8','#22c55e','#a855f7','#f59e0b','#ef4444'];
+const store={
+  get voters(){return JSON.parse(localStorage.fv_voters||'{}')},
+  set voters(x){localStorage.fv_voters=JSON.stringify(x)},
+  get cands(){return JSON.parse(localStorage.fv_cands||'null')||[{name:'Alice',votes:0},{name:'Bob',votes:0},{name:'Carol',votes:0}]},
+  set cands(x){localStorage.fv_cands=JSON.stringify(x)}
+};
+let session=null, selected=null, ready=false;
+const opts=new faceapi.TinyFaceDetectorOptions({inputSize:320,scoreThreshold:0.5});
+
+function msg(el,type,t){el.className='msg '+type;el.textContent=t}
+function tab(t){
+  ['verify','register','vote','results'].forEach(x=>$('p-'+x).classList.toggle('hide',x!==t));
+  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  $('cam-card').classList.toggle('hide',t==='vote'||t==='results');
+  if(t==='vote'){ if(!session){tab('verify');msg($('vmsg'),'err','Verify your face first.');return} renderVote() }
+  if(t==='results') renderResults();
+}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>tab(b.dataset.t));
+
+async function init(){
+  try{
+    await Promise.all([faceapi.nets.tinyFaceDetector.loadFromUri(MODELS),
+      faceapi.nets.faceLandmark68TinyNet.loadFromUri(MODELS),
+      faceapi.nets.faceRecognitionNet.loadFromUri(MODELS)]);
+    $('st').textContent='Starting camera…';
+    $('v').srcObject=await navigator.mediaDevices.getUserMedia({video:{facingMode:'user',width:640,height:480}});
+    await $('v').play();
+    ready=true;$('vbtn').disabled=false;$('rbtn').disabled=false;
+    $('status').classList.add('hide');
+    loop();
+  }catch(e){$('st').textContent='Error: '+e.message+' (needs internet for models + camera permission)'}
+}
+async function loop(){ // live green box
+  const v=$('v'),c=$('ov');
+  if(v.videoWidth){c.width=v.videoWidth;c.height=v.videoHeight;
+    const d=await faceapi.detectAllFaces(v,opts),ctx=c.getContext('2d');
+    ctx.clearRect(0,0,c.width,c.height);
+    ctx.strokeStyle='#22c55e';ctx.lineWidth=3;
+    d.forEach(f=>ctx.strokeRect(f.box.x,f.box.y,f.box.width,f.box.height));}
+  setTimeout(loop,150);
+}
+async function getDescriptor(){
+  const all=await faceapi.detectAllFaces($('v'),opts).withFaceLandmarks(true).withFaceDescriptors();
+  if(all.length===0) throw new Error('No face detected. Improve lighting.');
+  if(all.length>1) throw new Error('Multiple faces detected. Only one person allowed.');
+  return Array.from(all[0].descriptor);
+}
+const dist=(a,b)=>Math.hypot(...a.map((x,i)=>x-b[i]));
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+$('rbtn').onclick=async()=>{
+  const id=$('rid').value.trim(),name=$('rname').value.trim(),m=$('rmsg');
+  if(!id||!name)return msg(m,'err','ID and name required.');
+  const vs=store.voters; if(vs[id])return msg(m,'err','This ID is already registered.');
+  $('rbtn').disabled=true;
+  try{
+    const ds=[];
+    for(let i=0;i<5;i++){msg(m,'info',`Capturing sample ${i+1}/5 — hold still, slightly turn your head`);ds.push(await getDescriptor());await sleep(600)}
+    for(const [oid,o] of Object.entries(vs)) if(o.descs.some(d=>ds.some(x=>dist(d,x)<THRESH))) throw new Error('This face is already registered under another ID.');
+    vs[id]={name,descs:ds,voted:false};store.voters=vs;
+    msg(m,'ok','✔ Registered! You can now verify.');$('rid').value=$('rname').value='';
+  }catch(e){msg(m,'err',e.message)}
+  $('rbtn').disabled=false;
+};
+
+$('vbtn').onclick=async()=>{
+  const id=$('vid').value.trim(),m=$('vmsg'),vs=store.voters,voter=vs[id];
+  $('tag').style.display='none';
+  if(!voter)return msg(m,'err','Unknown voter ID.');
+  if(voter.voted)return msg(m,'err','This voter has already voted.');
+  $('vbtn').disabled=true;msg(m,'info','Scanning face…');
+  try{
+    const d=await getDescriptor(),best=Math.min(...voter.descs.map(x=>dist(x,d)));
+    if(best>=THRESH) throw new Error('Face does not match this ID.');
+    session=id;$('tag').style.display='block';
+    msg(m,'ok','✔ Verification Successful. Welcome, '+voter.name);
+    setTimeout(()=>tab('vote'),1200);
+  }catch(e){msg(m,'err',e.message)}
+  $('vbtn').disabled=false;
+};
+
+function renderVote(){
+  $('vwho').innerHTML='<small>Voting as '+store.voters[session].name+'</small>';
+  selected=null;$('smsg').className='msg';
+  $('cands').innerHTML=store.cands.map((c,i)=>`<div class="cand" data-i="${i}"><div class="av" style="background:${COLORS[i%5]}33;color:${COLORS[i%5]}">${c.name[0]}</div>${c.name}</div>`).join('');
+  document.querySelectorAll('.cand').forEach(el=>el.onclick=()=>{
+    selected=+el.dataset.i;document.querySelectorAll('.cand').forEach(x=>x.classList.toggle('sel',x===el))});
+}
+$('sbtn').onclick=()=>{
+  const m=$('smsg');if(selected===null)return msg(m,'err','Pick a candidate.');
+  const vs=store.voters;if(!session||vs[session].voted)return msg(m,'err','Already voted.');
+  const cs=store.cands;cs[selected].votes++;store.cands=cs;
+  vs[session].voted=true;store.voters=vs;session=null;
+  msg(m,'ok','✔ Vote recorded. Thank you!');setTimeout(()=>tab('results'),1000);
+};
+
+function renderResults(){
+  const cs=store.cands,t=cs.reduce((a,c)=>a+c.votes,0);
+  $('res').innerHTML=cs.map((c,i)=>{const p=t?(100*c.votes/t):0;
+    return `<div class="row"><div class="top"><span>${c.name}</span><span>${p.toFixed(1)}% (${c.votes})</span></div><div class="bar"><i style="width:${p}%;background:${COLORS[i%5]}"></i></div></div>`}).join('');
+  $('tot').textContent='Total votes: '+t;
+}
+$('reset').onclick=()=>{if(confirm('Delete ALL voters and votes?')){localStorage.removeItem('fv_voters');localStorage.removeItem('fv_cands');renderResults()}};
+window.addEventListener('storage',()=>{if(!$('p-results').classList.contains('hide'))renderResults()});
+setInterval(()=>{if(!$('p-results').classList.contains('hide'))renderResults()},3000);
+init();
+</script></body></html>
